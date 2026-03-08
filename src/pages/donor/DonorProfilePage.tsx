@@ -314,8 +314,10 @@ export function DonorProfilePage() {
               <Phone className="h-5 w-5 text-primary" />
               <div>
                 <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="font-medium">{profile.phone}</p>
-              </div>
+                <a href={`tel:${profile.phone.startsWith('+88') ? profile.phone : `+88${profile.phone}`}`}>
+                  <p className="font-medium">{profile.phone.startsWith('+88') ? profile.phone : `+88${profile.phone}`}</p>
+                </a>
+              </div>  
             </div>
             
             <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">

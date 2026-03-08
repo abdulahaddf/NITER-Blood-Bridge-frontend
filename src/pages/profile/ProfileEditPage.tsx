@@ -257,13 +257,13 @@ export function ProfileEditPage() {
                 <Label htmlFor="phone">Phone Number</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                    +880
+                    +88
                   </span>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="1XXXXXXXXX"
+                    placeholder="01XXXXXXXXX"
                     className="pl-14"
                     required
                   />

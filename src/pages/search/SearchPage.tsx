@@ -7,7 +7,6 @@ import {
   X,
   SlidersHorizontal,
   HeartPulse,
-  CloudCog,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -301,7 +300,7 @@ export function SearchPage() {
           <div>
             <h1 className="text-2xl font-bold mb-1">Find Blood Donors</h1>
             <p className="text-muted-foreground">
-              {stats.total} eligible donors available
+              {stats.total} donors found {filters.eligibilityOnly && '(eligible only)'}
             </p>
           </div>
           <Button 
