@@ -42,6 +42,13 @@ axiosInstance.interceptors.request.use(config => {
 axiosInstance.interceptors.response.use(
   response => response,
   error => {
+    if (error.response?.status === 401) {
+      clearTokens();
+      // Only redirect if not already on login/landing page to avoid loops
+      if (!window.location.pathname.startsWith('/login') && window.location.pathname !== '/') {
+        window.location.href = '/login';
+      }
+    }
     const message =
       error.response?.data?.message ??
       error.response?.data?.error ??

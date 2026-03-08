@@ -52,9 +52,9 @@ export function AdminBroadcastPage() {
       const stats = statsRes.status === 'fulfilled' ? (statsRes.value as any) : {};
       
       const bgCounts: Record<string, number> = {};
-      if (stats.byBloodGroup) {
-        Object.entries(stats.byBloodGroup).forEach(([bg, val]: [string, any]) => {
-          bgCounts[bg] = val.total;
+      if (stats.bloodGroupStats) {
+        stats.bloodGroupStats.forEach((stat: any) => {
+          bgCounts[stat.bloodGroup] = stat.count;
         });
       }
 

@@ -11,6 +11,7 @@ import {
   Activity,
   Droplet,
   Loader2,
+  CloudCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,35 +51,33 @@ export function LandingPage() {
     bloodGroupStats: [],
   });
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
-    Promise.allSettled([
-      api.get<{ totalUsers: number; eligibleDonors: number }>('/api/donors/public-stats').catch(() => ({ totalUsers: 142, eligibleDonors: 58 })),
-      api.get<any>('/api/donors/stats').catch(() => ({})),
-    ]).then(([mainRes, detailRes]) => {
-      const main = mainRes.status === 'fulfilled' ? (mainRes.value as any) : { totalUsers: 142, eligibleDonors: 58 };
-      const detail = detailRes.status === 'fulfilled' ? (detailRes.value as any) : {};
-      
-      let bgStats: { bloodGroup: BloodGroup; count: number; eligibleCount: number }[] = [];
-      if (detail.bloodGroupStats) {
-        bgStats = detail.bloodGroupStats;
-      } else if (detail.byBloodGroup) {
-        bgStats = BLOOD_GROUPS.map(bg => ({
-          bloodGroup: bg,
-          count: detail.byBloodGroup[bg]?.total ?? 0,
-          eligibleCount: detail.byBloodGroup[bg]?.eligible ?? 0,
-        }));
-      }
-
-      setStats({
-        totalUsers: main.totalUsers,
-        eligibleDonors: main.eligibleDonors,
-        bloodGroupStats: bgStats,
+    setIsLoading(true);
+    api.get<any>('/api/donors/public-stats')
+      .then(data => {
+        if (data) {
+          console.log(data);
+          setStats({
+            totalUsers: data.data.totalDonors || 0,
+            eligibleDonors: data.data.eligibleDonors || 0,
+            bloodGroupStats: data.data.byBloodGroup || [],
+          });
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch public stats:', err);
+        // Fallback to mock-like data if API fails
+        setStats({
+          totalUsers: 436,
+          eligibleDonors: 436,
+          bloodGroupStats: [],
+        });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-      setIsLoading(false);
-    });
   }, []);
-
+console.log(stats);
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -89,7 +88,7 @@ export function LandingPage() {
         {/* Animated Background */}
         <div className="absolute inset-0 blood-gradient-subtle">
           <div className="absolute inset-0 opacity-30">
-            {[...Array(20)].map((_, i) => (
+            {[...Array(20)]?.map((_, i) => (
               <motion.div
                 key={i}
                 className="absolute rounded-full bg-primary/20"
@@ -218,7 +217,7 @@ export function LandingPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {(isLoading ? BLOOD_GROUPS.map(bg => ({ bloodGroup: bg, count: 0, eligibleCount: 0 })) : stats.bloodGroupStats).map((stat, index) => (
+            {(isLoading ? BLOOD_GROUPS?.map(bg => ({ bloodGroup: bg, count: 0, eligibleCount: 0 })) : stats.bloodGroupStats)?.map((stat, index) => (
               <motion.div
                 key={stat.bloodGroup}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -283,7 +282,7 @@ export function LandingPage() {
                   "Once verified, you will appear in search results when someone needs your blood type.",
                 step: "03",
               },
-            ].map((item, index) => (
+            ]?.map((item, index) => (
               <motion.div
                 key={item.title}
                 initial={{ opacity: 0, y: 20 }}
