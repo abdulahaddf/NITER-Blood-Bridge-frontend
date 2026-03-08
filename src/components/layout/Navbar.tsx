@@ -62,7 +62,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          {/* <div className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.path}
@@ -78,7 +78,7 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-          </div>
+          </div> */}
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-2">
