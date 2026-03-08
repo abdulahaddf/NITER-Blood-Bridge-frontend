@@ -54,10 +54,10 @@ export function LandingPage() {
   useEffect(() => {
     Promise.allSettled([
       api.get<{ totalUsers: number; eligibleDonors: number }>('/api/donors/public-stats').catch(() => ({ totalUsers: 142, eligibleDonors: 58 })),
-      api.get<PublicStats>('/api/donors/stats').catch(() => ({})),
+      api.get<any>('/api/donors/stats').catch(() => ({})),
     ]).then(([mainRes, detailRes]) => {
-      const main = mainRes.status === 'fulfilled' ? mainRes.value : { totalUsers: 142, eligibleDonors: 58 };
-      const detail = detailRes.status === 'fulfilled' ? detailRes.value : {};
+      const main = mainRes.status === 'fulfilled' ? (mainRes.value as any) : { totalUsers: 142, eligibleDonors: 58 };
+      const detail = detailRes.status === 'fulfilled' ? (detailRes.value as any) : {};
       
       let bgStats: { bloodGroup: BloodGroup; count: number; eligibleCount: number }[] = [];
       if (detail.bloodGroupStats) {
@@ -65,8 +65,8 @@ export function LandingPage() {
       } else if (detail.byBloodGroup) {
         bgStats = BLOOD_GROUPS.map(bg => ({
           bloodGroup: bg,
-          count: detail.byBloodGroup![bg]?.total ?? 0,
-          eligibleCount: detail.byBloodGroup![bg]?.eligible ?? 0,
+          count: detail.byBloodGroup[bg]?.total ?? 0,
+          eligibleCount: detail.byBloodGroup[bg]?.eligible ?? 0,
         }));
       }
 

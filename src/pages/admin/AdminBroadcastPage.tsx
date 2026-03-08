@@ -46,14 +46,14 @@ export function AdminBroadcastPage() {
   useEffect(() => {
     Promise.allSettled([
       api.get<{ totalUsers: number }>('/api/admin/dashboard').catch(() => ({ totalUsers: 0 })),
-      api.get<{ byBloodGroup?: Record<BloodGroup, { total: number }> }>('/api/donors/stats').catch(() => ({})),
+      api.get<any>('/api/donors/stats').catch(() => ({})),
     ]).then(([dashRes, statsRes]) => {
-      const dash = dashRes.status === 'fulfilled' ? dashRes.value : { totalUsers: 0 };
-      const stats = statsRes.status === 'fulfilled' ? statsRes.value : {};
+      const dash = dashRes.status === 'fulfilled' ? (dashRes.value as any) : { totalUsers: 0 };
+      const stats = statsRes.status === 'fulfilled' ? (statsRes.value as any) : {};
       
       const bgCounts: Record<string, number> = {};
       if (stats.byBloodGroup) {
-        Object.entries(stats.byBloodGroup).forEach(([bg, val]) => {
+        Object.entries(stats.byBloodGroup).forEach(([bg, val]: [string, any]) => {
           bgCounts[bg] = val.total;
         });
       }
