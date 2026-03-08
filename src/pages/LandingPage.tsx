@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Droplets,
@@ -11,14 +10,13 @@ import {
   Activity,
   Droplet,
   Loader2,
-  CloudCog,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BloodGroupLabels, type BloodGroup } from "@/types";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
-import { api } from "@/lib/api";
+import { usePublicStats } from "@/hooks/usePublicStats";
 
 const bloodGroupColors: Record<BloodGroup, string> = {
   A_POS: "bg-blue-500",
@@ -33,51 +31,13 @@ const bloodGroupColors: Record<BloodGroup, string> = {
 
 const BLOOD_GROUPS: BloodGroup[] = ['A_POS','A_NEG','B_POS','B_NEG','AB_POS','AB_NEG','O_POS','O_NEG'];
 
-interface PublicStats {
-  totalUsers: number;
-  eligibleDonors: number;
-  bloodGroupStats?: { bloodGroup: BloodGroup; count: number; eligibleCount: number }[];
-  byBloodGroup?: Record<BloodGroup, { total: number; eligible: number }>;
-}
-
 export function LandingPage() {
-  const [stats, setStats] = useState<{
-    totalUsers: number;
-    eligibleDonors: number;
-    bloodGroupStats: { bloodGroup: BloodGroup; count: number; eligibleCount: number }[];
-  }>({
-    totalUsers: 0,
-    eligibleDonors: 0,
-    bloodGroupStats: [],
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    setIsLoading(true);
-    api.get<any>('/api/donors/public-stats')
-      .then(data => {
-        if (data) {
-          console.log(data);
-          setStats({
-            totalUsers: data.data.totalDonors || 0,
-            eligibleDonors: data.data.eligibleDonors || 0,
-            bloodGroupStats: data.data.byBloodGroup || [],
-          });
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch public stats:', err);
-        // Fallback to mock-like data if API fails
-        setStats({
-          totalUsers: 436,
-          eligibleDonors: 436,
-          bloodGroupStats: [],
-        });
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, []);
-console.log(stats);
+  const { stats, isLoading } = usePublicStats();
+
+  // Map hook stats to component local names for compatibility
+  const totalUsers = stats.totalDonors;
+  const eligibleDonors = stats.eligibleDonors;
+  const bloodGroupStats = stats.byBloodGroup;
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
@@ -178,7 +138,7 @@ console.log(stats);
             >
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-primary">
-                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : `${stats.totalUsers}+`}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : `${totalUsers}+`}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Total Donors
@@ -186,7 +146,7 @@ console.log(stats);
               </div>
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-primary">
-                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : stats.eligibleDonors}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : eligibleDonors}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Currently Eligible
@@ -217,7 +177,7 @@ console.log(stats);
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {(isLoading ? BLOOD_GROUPS?.map(bg => ({ bloodGroup: bg, count: 0, eligibleCount: 0 })) : stats.bloodGroupStats)?.map((stat, index) => (
+            {(isLoading ? BLOOD_GROUPS?.map(bg => ({ bloodGroup: bg, count: 0, eligibleCount: 0 })) : bloodGroupStats)?.map((stat: { bloodGroup: BloodGroup; count: number; eligibleCount: number }, index: number) => (
               <motion.div
                 key={stat.bloodGroup}
                 initial={{ opacity: 0, scale: 0.9 }}
