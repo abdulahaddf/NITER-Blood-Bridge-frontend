@@ -6,7 +6,8 @@ import {
   Droplets,
   X,
   SlidersHorizontal,
-  HeartPulse
+  HeartPulse,
+  CloudCog
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,10 +47,10 @@ const bloodGroupColors: Record<BloodGroup, string> = {
   O_NEG: 'bg-green-700 hover:bg-green-800',
 };
 
+
 function DonorCard({ donor }: { donor: ReturnType<typeof useSearch>['profiles'][0] }) {
   const navigate = useNavigate();
   const eligibility = calculateEligibility(donor);
-
   return (
     <div 
       onClick={() => navigate(`/donor/${donor.id}`)}

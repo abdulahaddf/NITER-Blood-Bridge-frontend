@@ -1,16 +1,18 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { 
-  DonorProfile, 
-  DonorSearchFilters, 
-  BloodGroup, 
-  Department
-} from '@/types';
-import { calculateEligibility, BloodCompatibility } from '@/types';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import type { DonorProfile, DonorSearchFilters, BloodGroup, Department } from '@/types';
+import { BloodCompatibility } from '@/types';
+import { api } from '@/lib/api';
 
-const PROFILES_STORAGE_KEY = 'niter_blood_profiles';
+interface DonorsApiResponse {
+  data: DonorProfile[];
+  total: number;
+  page: number;
+  limit: number;
+}
 
 export function useSearch() {
   const [profiles, setProfiles] = useState<DonorProfile[]>([]);
+  const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   const [filters, setFilters] = useState<DonorSearchFilters>({
@@ -25,115 +27,69 @@ export function useSearch() {
     sortBy: 'eligible',
   });
 
-  // Load profiles
-  useEffect(() => {
-    const stored = localStorage.getItem(PROFILES_STORAGE_KEY);
-    if (stored) {
-      setProfiles(JSON.parse(stored));
-    }
-    setIsLoading(false);
-  }, []);
-
   // Get compatible blood groups
   const getCompatibleGroups = useCallback((groups: BloodGroup[]): BloodGroup[] => {
     if (groups.length === 0) return [];
-    
     const compatible = new Set<BloodGroup>();
     groups.forEach(group => {
       BloodCompatibility[group].forEach(g => compatible.add(g));
     });
-    
     return Array.from(compatible);
   }, []);
 
-  // Filter and sort profiles
-  const filteredProfiles = useMemo(() => {
-    let result = [...profiles];
+  const abortRef = useRef<AbortController | null>(null);
 
-    // Filter by search query (name or student ID)
-    if (filters.searchQuery) {
-      const query = filters.searchQuery.toLowerCase();
-      result = result.filter(p => 
-        p.fullName.toLowerCase().includes(query) ||
-        p.studentId.toLowerCase().includes(query)
-      );
+  // Fetch donors from API whenever filters change
+  useEffect(() => {
+    // Abort previous request
+    if (abortRef.current) abortRef.current.abort();
+    abortRef.current = new AbortController();
+
+    setIsLoading(true);
+
+    const bloodGroupsToSend = filters.compatibilityMode && filters.bloodGroups.length > 0
+      ? getCompatibleGroups(filters.bloodGroups)
+      : filters.bloodGroups;
+
+    const params: Record<string, string | number | boolean | string[] | undefined | null> = {
+      search: filters.searchQuery || undefined,
+      compatibilityMode: filters.compatibilityMode,
+      eligibilityOnly: filters.eligibilityOnly,
+      onCampusOnly: filters.onCampusOnly,
+      willingToDonate: filters.willingToDonate,
+      sortBy: filters.sortBy,
+      batchMin: filters.batchRange[0],
+      batchMax: filters.batchRange[1],
+      page: 1,
+      limit: 100,
+    };
+
+    if (bloodGroupsToSend.length > 0) {
+      params.bloodGroups = bloodGroupsToSend;
     }
-
-    // Filter by blood group
-    if (filters.bloodGroups.length > 0) {
-      const groupsToFilter = filters.compatibilityMode 
-        ? getCompatibleGroups(filters.bloodGroups)
-        : filters.bloodGroups;
-      result = result.filter(p => groupsToFilter.includes(p.bloodGroup));
-    }
-
-    // Filter by eligibility
-    if (filters.eligibilityOnly) {
-      result = result.filter(p => {
-        const eligibility = calculateEligibility(p);
-        return eligibility.eligible;
-      });
-    }
-
-    // Filter by department
     if (filters.departments.length > 0) {
-      result = result.filter(p => filters.departments.includes(p.department));
+      params.departments = filters.departments;
     }
 
-    // Filter by batch range
-    result = result.filter(p => 
-      p.batch >= filters.batchRange[0] && p.batch <= filters.batchRange[1]
-    );
-
-    // Filter by on-campus
-    if (filters.onCampusOnly) {
-      result = result.filter(p => 
-        p.currentLocation.toLowerCase().includes('niter') ||
-        p.currentLocation.toLowerCase().includes('campus') ||
-        p.currentLocation.toLowerCase().includes('hall')
-      );
-    }
-
-    // Filter by willing to donate
-    if (filters.willingToDonate) {
-      result = result.filter(p => p.willingToDonate);
-    }
-
-    // Sort results
-    result.sort((a, b) => {
-      switch (filters.sortBy) {
-        case 'eligible': {
-          const eligibilityA = calculateEligibility(a);
-          const eligibilityB = calculateEligibility(b);
-          if (eligibilityA.eligible && !eligibilityB.eligible) return -1;
-          if (!eligibilityA.eligible && eligibilityB.eligible) return 1;
-          return 0;
+    api.get<DonorsApiResponse | DonorProfile[]>('/api/donors', params)
+      .then(response => {
+        // Handle both paginated and array responses
+        if (Array.isArray(response)) {
+          setProfiles(response);
+          setTotal(response.length);
+        } else {
+          setProfiles(response.data ?? []);
+          setTotal(response.total ?? 0);
         }
-        case 'donations':
-          return b.totalDonations - a.totalDonations;
-        case 'recent':
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-        case 'batch':
-          return b.batch - a.batch;
-        default:
-          return 0;
-      }
-    });
-
-    return result;
-  }, [profiles, filters, getCompatibleGroups]);
-
-  // Stats
-  const stats = useMemo(() => {
-    const total = profiles.length;
-    const eligible = profiles.filter(p => calculateEligibility(p).eligible).length;
-    const byBloodGroup = profiles.reduce((acc, p) => {
-      acc[p.bloodGroup] = (acc[p.bloodGroup] || 0) + 1;
-      return acc;
-    }, {} as Record<BloodGroup, number>);
-
-    return { total, eligible, byBloodGroup };
-  }, [profiles]);
+      })
+      .catch(err => {
+        // Ignore aborted requests
+        if (err instanceof Error && err.name === 'AbortError') return;
+        setProfiles([]);
+        setTotal(0);
+      })
+      .finally(() => setIsLoading(false));
+  }, [filters, getCompatibleGroups]);
 
   const updateFilters = useCallback((updates: Partial<DonorSearchFilters>) => {
     setFilters(prev => ({ ...prev, ...updates }));
@@ -144,7 +100,7 @@ export function useSearch() {
       ...prev,
       bloodGroups: prev.bloodGroups.includes(group)
         ? prev.bloodGroups.filter(g => g !== group)
-        : [...prev.bloodGroups, group]
+        : [...prev.bloodGroups, group],
     }));
   }, []);
 
@@ -153,7 +109,7 @@ export function useSearch() {
       ...prev,
       departments: prev.departments.includes(dept)
         ? prev.departments.filter(d => d !== dept)
-        : [...prev.departments, dept]
+        : [...prev.departments, dept],
     }));
   }, []);
 
@@ -171,22 +127,28 @@ export function useSearch() {
     });
   }, []);
 
-  const hasActiveFilters = useMemo(() => {
-    return (
-      filters.bloodGroups.length > 0 ||
-      filters.compatibilityMode ||
-      !filters.eligibilityOnly ||
-      filters.departments.length > 0 ||
-      filters.batchRange[0] !== 1 ||
-      filters.batchRange[1] !== 16 ||
-      filters.onCampusOnly ||
-      !filters.willingToDonate ||
-      filters.searchQuery.length > 0
-    );
-  }, [filters]);
+  const hasActiveFilters =
+    filters.bloodGroups.length > 0 ||
+    filters.compatibilityMode ||
+    !filters.eligibilityOnly ||
+    filters.departments.length > 0 ||
+    filters.batchRange[0] !== 1 ||
+    filters.batchRange[1] !== 16 ||
+    filters.onCampusOnly ||
+    !filters.willingToDonate ||
+    filters.searchQuery.length > 0;
+
+  const stats = {
+    total,
+    eligible: profiles.length,
+    byBloodGroup: profiles.reduce((acc, p) => {
+      acc[p.bloodGroup] = (acc[p.bloodGroup] || 0) + 1;
+      return acc;
+    }, {} as Record<BloodGroup, number>),
+  };
 
   return {
-    profiles: filteredProfiles,
+    profiles,
     allProfiles: profiles,
     isLoading,
     filters,

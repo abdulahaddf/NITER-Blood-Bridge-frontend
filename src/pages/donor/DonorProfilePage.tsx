@@ -46,7 +46,7 @@ export function DonorProfilePage() {
   const [contactRevealed, setContactRevealed] = useState(false);
 
   const profile = id ? getProfileById(id) : undefined;
-
+console.log(profile);
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">

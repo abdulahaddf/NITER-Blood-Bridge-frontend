@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import {
   Users,
@@ -11,8 +12,36 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { dashboardStats, bloodGroupStats, mockUsers } from "@/data/mockData";
 import { BloodGroupLabels } from "@/types";
+import { api } from "@/lib/api";
+import type { BloodGroup } from "@/types";
+
+interface DashboardStats {
+  totalUsers: number;
+  verifiedProfiles: number;
+  eligibleDonors: number;
+  pendingDeletions: number;
+  openBloodRequests?: number;
+}
+
+interface BloodGroupStat {
+  bloodGroup: BloodGroup;
+  count: number;
+  eligibleCount: number;
+}
+
+interface DonorStats {
+  byBloodGroup?: Record<BloodGroup, { total: number; eligible: number }>;
+  bloodGroupStats?: BloodGroupStat[];
+}
+
+interface RecentUser {
+  id: string;
+  email: string;
+  emailVerified: boolean;
+  createdAt: string;
+  role: string;
+}
 
 const bloodGroupColors: Record<string, string> = {
   A_POS: "bg-blue-500",
@@ -25,35 +54,72 @@ const bloodGroupColors: Record<string, string> = {
   O_NEG: "bg-green-700",
 };
 
+const BLOOD_GROUPS: BloodGroup[] = ['A_POS','A_NEG','B_POS','B_NEG','AB_POS','AB_NEG','O_POS','O_NEG'];
+
 export function AdminDashboardPage() {
   const navigate = useNavigate();
-  const recentUsers = mockUsers.slice(0, 5);
+
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [bloodGroupStats, setBloodGroupStats] = useState<BloodGroupStat[]>([]);
+  const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.allSettled([
+      api.get<DashboardStats>('/api/admin/dashboard'),
+      api.get<DonorStats>('/api/donors/stats'),
+      api.get<{ data: RecentUser[] } | RecentUser[]>('/api/users', { limit: 5, page: 1 }),
+    ]).then(([dashboardRes, donorStatsRes, usersRes]) => {
+      if (dashboardRes.status === 'fulfilled') {
+        setStats(dashboardRes.value);
+      }
+      if (donorStatsRes.status === 'fulfilled') {
+        const ds = donorStatsRes.value;
+        // Handle different response shapes
+        if (ds.bloodGroupStats) {
+          setBloodGroupStats(ds.bloodGroupStats);
+        } else if (ds.byBloodGroup) {
+          const converted = BLOOD_GROUPS.map(bg => ({
+            bloodGroup: bg,
+            count: ds.byBloodGroup![bg]?.total ?? 0,
+            eligibleCount: ds.byBloodGroup![bg]?.eligible ?? 0,
+          }));
+          setBloodGroupStats(converted);
+        }
+      }
+      if (usersRes.status === 'fulfilled') {
+        const val = usersRes.value;
+        setRecentUsers(Array.isArray(val) ? val : (val as { data: RecentUser[] }).data ?? []);
+      }
+      setIsLoading(false);
+    });
+  }, []);
 
   const statsCards = [
     {
       title: "Total Users",
-      value: dashboardStats.totalUsers,
+      value: stats?.totalUsers ?? '—',
       icon: Users,
       color: "bg-blue-500",
       link: "/dashboard/users",
     },
     {
       title: "Verified Profiles",
-      value: dashboardStats.verifiedProfiles,
+      value: stats?.verifiedProfiles ?? '—',
       icon: UserCheck,
       color: "bg-green-500",
       link: "/dashboard/users",
     },
     {
       title: "Eligible Donors",
-      value: dashboardStats.eligibleDonors,
+      value: stats?.eligibleDonors ?? '—',
       icon: HeartPulse,
       color: "bg-red-500",
       link: "/search",
     },
     {
       title: "Pending Deletions",
-      value: dashboardStats.pendingDeletions,
+      value: stats?.pendingDeletions ?? '—',
       icon: Trash2,
       color: "bg-orange-500",
       link: "/dashboard/deletions",
@@ -84,7 +150,11 @@ export function AdminDashboardPage() {
                   <p className="text-sm text-muted-foreground mb-1">
                     {stat.title}
                   </p>
-                  <p className="text-3xl font-bold">{stat.value}</p>
+                  <p className="text-3xl font-bold">
+                    {isLoading ? (
+                      <span className="inline-block w-10 h-8 bg-muted rounded animate-pulse" />
+                    ) : stat.value}
+                  </p>
                 </div>
                 <div
                   className={`w-12 h-12 rounded-lg ${stat.color} flex items-center justify-center`}
@@ -108,33 +178,37 @@ export function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {bloodGroupStats.map((stat) => (
-                <div key={stat.bloodGroup} className="flex items-center gap-4">
-                  <span
-                    className={`blood-group-badge w-12 justify-center ${bloodGroupColors[stat.bloodGroup]}`}
-                  >
-                    {BloodGroupLabels[stat.bloodGroup]}
-                  </span>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm">
-                        {stat.eligibleCount} eligible
+              {isLoading
+                ? [...Array(4)].map((_, i) => (
+                    <div key={i} className="h-8 bg-muted rounded animate-pulse" />
+                  ))
+                : bloodGroupStats.map((stat) => (
+                    <div key={stat.bloodGroup} className="flex items-center gap-4">
+                      <span
+                        className={`blood-group-badge w-12 justify-center ${bloodGroupColors[stat.bloodGroup]}`}
+                      >
+                        {BloodGroupLabels[stat.bloodGroup]}
                       </span>
-                      <span className="text-sm text-muted-foreground">
-                        of {stat.count}
-                      </span>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm">
+                            {stat.eligibleCount} eligible
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            of {stat.count}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${bloodGroupColors[stat.bloodGroup]}`}
+                            style={{
+                              width: stat.count > 0 ? `${(stat.eligibleCount / stat.count) * 100}%` : '0%',
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full ${bloodGroupColors[stat.bloodGroup]}`}
-                        style={{
-                          width: `${(stat.eligibleCount / stat.count) * 100}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  ))}
             </div>
           </CardContent>
         </Card>
@@ -157,29 +231,33 @@ export function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="font-medium text-primary">
-                        {user.email.charAt(0).toUpperCase()}
-                      </span>
+              {isLoading
+                ? [...Array(3)].map((_, i) => (
+                    <div key={i} className="h-12 bg-muted rounded animate-pulse" />
+                  ))
+                : recentUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <span className="font-medium text-primary">
+                            {user.email.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{user.email}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(user.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant={user.emailVerified ? "default" : "secondary"}>
+                        {user.emailVerified ? "Verified" : "Pending"}
+                      </Badge>
                     </div>
-                    <div>
-                      <p className="font-medium text-sm">{user.email}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(user.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant={user.emailVerified ? "default" : "secondary"}>
-                    {user.emailVerified ? "Verified" : "Pending"}
-                  </Badge>
-                </div>
-              ))}
+                  ))}
             </div>
           </CardContent>
         </Card>

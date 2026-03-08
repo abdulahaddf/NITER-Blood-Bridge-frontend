@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Search, 
   Filter, 
@@ -6,7 +6,8 @@ import {
   UserX, 
   Shield,
   Trash2,
-  Download
+  Download,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,52 +28,110 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { mockUsers, mockDonorProfiles } from '@/data/mockData';
 import { DepartmentLabels, BloodGroupLabels } from '@/types';
+import { api } from '@/lib/api';
 import { toast } from 'sonner';
+
+interface UserWithProfile {
+  id: string;
+  email: string;
+  emailVerified: boolean;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  profile?: {
+    fullName?: string;
+    studentId?: string;
+    department?: string;
+    bloodGroup?: string;
+  };
+}
 
 export function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [users, setUsers] = useState<UserWithProfile[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Combine user data with profile data
-  const usersWithProfiles = mockUsers.map(user => {
-    const profile = mockDonorProfiles.find(p => p.userId === user.id);
-    return { ...user, profile };
+  const loadUsers = useCallback(async (search?: string) => {
+    setIsLoading(true);
+    try {
+      const params: Record<string, string | number | boolean | undefined> = { limit: 100, page: 1 };
+      if (search) params.search = search;
+      const response = await api.get<{ data: UserWithProfile[] } | UserWithProfile[]>('/api/users', params);
+      setUsers(Array.isArray(response) ? response : (response as { data: UserWithProfile[] }).data ?? []);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load users');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
+  // Client-side filter for real-time search feedback while debounce can be added later
+  const filteredUsers = users.filter(user => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      user.email.toLowerCase().includes(q) ||
+      user.profile?.fullName?.toLowerCase().includes(q) ||
+      user.profile?.studentId?.toLowerCase().includes(q)
+    );
   });
 
-  const filteredUsers = usersWithProfiles.filter(user => 
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.profile?.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.profile?.studentId.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const toggleUserSelection = (userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
+    setSelectedUsers(prev =>
+      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
     );
   };
 
   const toggleAllSelection = () => {
-    if (selectedUsers.length === filteredUsers.length) {
-      setSelectedUsers([]);
-    } else {
-      setSelectedUsers(filteredUsers.map(u => u.id));
+    setSelectedUsers(
+      selectedUsers.length === filteredUsers.length ? [] : filteredUsers.map(u => u.id)
+    );
+  };
+
+  const handleDeactivate = async (userId: string) => {
+    try {
+      await api.post(`/api/users/${userId}/deactivate`);
+      toast.success('User deactivated');
+      loadUsers(searchQuery || undefined);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to deactivate user');
     }
   };
 
-  const handleDeactivate = () => {
-    toast.success('User deactivated');
+  const handleReactivate = async (userId: string) => {
+    try {
+      await api.post(`/api/users/${userId}/reactivate`);
+      toast.success('User reactivated');
+      loadUsers(searchQuery || undefined);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to reactivate user');
+    }
   };
 
-  const handlePromote = () => {
-    toast.success('User promoted to admin');
+  const handlePromote = async (userId: string) => {
+    try {
+      await api.patch(`/api/users/${userId}/role`, { role: 'ADMIN' });
+      toast.success('User promoted to admin');
+      loadUsers(searchQuery || undefined);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to promote user');
+    }
   };
 
-  const handleDelete = () => {
-    toast.success('User deleted');
+  const handleDelete = async (userId: string) => {
+    try {
+      await api.delete(`/api/users/${userId}`);
+      toast.success('User deleted');
+      setUsers(prev => prev.filter(u => u.id !== userId));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to delete user');
+    }
   };
 
   return (
@@ -86,6 +145,10 @@ export function AdminUsersPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => loadUsers(searchQuery || undefined)}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
           <Button variant="outline" onClick={() => toast.info('Export feature coming soon')}>
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -129,7 +192,7 @@ export function AdminUsersPage() {
           <TableHeader>
             <TableRow>
               <TableHead className="w-10">
-                <Checkbox 
+                <Checkbox
                   checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
                   onCheckedChange={toggleAllSelection}
                 />
@@ -144,10 +207,18 @@ export function AdminUsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map((user) => (
+            {isLoading ? (
+              [...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell colSpan={8}>
+                    <div className="h-10 bg-muted rounded animate-pulse" />
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : filteredUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
-                  <Checkbox 
+                  <Checkbox
                     checked={selectedUsers.includes(user.id)}
                     onCheckedChange={() => toggleUserSelection(user.id)}
                   />
@@ -175,7 +246,7 @@ export function AdminUsersPage() {
                     <div className="text-sm">
                       <p>{user.profile.studentId}</p>
                       <p className="text-xs text-muted-foreground">
-                        {user.profile.department ? DepartmentLabels[user.profile.department] : '-'}
+                        {user.profile.department ? DepartmentLabels[user.profile.department as keyof typeof DepartmentLabels] : '-'}
                       </p>
                     </div>
                   ) : (
@@ -183,9 +254,9 @@ export function AdminUsersPage() {
                   )}
                 </TableCell>
                 <TableCell>
-                  {user.profile ? (
+                  {user.profile?.bloodGroup ? (
                     <Badge className="blood-group-badge">
-                      {user.profile.bloodGroup ? BloodGroupLabels[user.profile.bloodGroup] : '-'}
+                      {BloodGroupLabels[user.profile.bloodGroup as keyof typeof BloodGroupLabels]}
                     </Badge>
                   ) : (
                     <span className="text-sm text-muted-foreground">-</span>
@@ -209,17 +280,24 @@ export function AdminUsersPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={handlePromote}>
+                      <DropdownMenuItem onClick={() => handlePromote(user.id)}>
                         <Shield className="h-4 w-4 mr-2" />
                         Promote to Admin
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleDeactivate}>
-                        <UserX className="h-4 w-4 mr-2" />
-                        Deactivate
-                      </DropdownMenuItem>
+                      {user.isActive ? (
+                        <DropdownMenuItem onClick={() => handleDeactivate(user.id)}>
+                          <UserX className="h-4 w-4 mr-2" />
+                          Deactivate
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem onClick={() => handleReactivate(user.id)}>
+                          <UserX className="h-4 w-4 mr-2" />
+                          Reactivate
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={handleDelete}
+                      <DropdownMenuItem
+                        onClick={() => handleDelete(user.id)}
                         className="text-destructive"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
