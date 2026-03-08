@@ -51,7 +51,7 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link
-            to="/search"
+            to="/"
             className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity"
           >
             <Droplets className="h-7 w-7" />
