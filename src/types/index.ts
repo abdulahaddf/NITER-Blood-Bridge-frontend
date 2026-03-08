@@ -79,10 +79,10 @@ export interface DonorProfile {
   id: string;
   userId: string;
   fullName: string;
-  department: Department;
-  idNumber: string;
+  department?: Department | null;
+  idNumber?: string | null;
   studentId: string;
-  batch: number;
+  batch?: number | null;
   phone: string;
   email: string;
   currentLocation: string;

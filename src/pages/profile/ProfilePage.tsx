@@ -9,8 +9,6 @@ import {
   Trash2, 
   Check, 
   Calendar,
-  Building2,
-  GraduationCap,
   Phone,
   Mail,
   Eye,
@@ -229,13 +227,13 @@ export function ProfilePage() {
 
                   {/* Details */}
                   <div className="space-y-3 text-sm">
-                    <div className="flex items-center gap-3">
-                      <Building2 className="h-4 w-4 text-muted-foreground" />
-                      <span>{DepartmentLabels[profile.department]}</span>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Department</p>
+                      <p className="font-medium">{profile.department ? DepartmentLabels[profile.department] : 'Not specified'}</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                      <span>{getBatchLabel(profile.batch)}</span>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Batch</p>
+                      <p className="font-medium">{profile.batch ? getBatchLabel(profile.batch) : 'Not specified'}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <MapPin className="h-4 w-4 text-muted-foreground" />

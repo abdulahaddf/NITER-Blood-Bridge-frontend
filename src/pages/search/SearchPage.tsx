@@ -31,7 +31,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useSearch } from '@/hooks/useSearch';
-import { BloodGroupLabels, DepartmentLabels, calculateEligibility, type BloodGroup, type Department } from '@/types';
+import { BloodGroupLabels, DepartmentLabels, getBatchLabel, calculateEligibility, type BloodGroup, type Department } from '@/types';
 import { cn } from '@/lib/utils';
 
 const bloodGroups: BloodGroup[] = ['A_POS', 'A_NEG', 'B_POS', 'B_NEG', 'AB_POS', 'AB_NEG', 'O_POS', 'O_NEG'];
@@ -69,7 +69,7 @@ function DonorCard({ donor }: { donor: ReturnType<typeof useSearch>['profiles'][
                 {donor.fullName}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {DepartmentLabels[donor.department]} · {donor.batch}th Batch
+                {donor.department ? DepartmentLabels[donor.department] : 'Not Specified'} · {donor.batch ? getBatchLabel(donor.batch) : 'Not Specified'}
               </p>
             </div>
           </div>

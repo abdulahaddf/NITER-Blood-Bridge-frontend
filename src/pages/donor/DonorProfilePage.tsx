@@ -154,8 +154,8 @@ export function DonorProfilePage() {
                 {/* Blood Group Badge */}
                 <div className="mb-4">
                   <span className={`blood-group-badge text-lg px-4 py-2 ${bloodGroupColors[profile.bloodGroup]}`}>
-                    {BloodGroupLabels[profile.bloodGroup]}
-                  </span>
+                      {BloodGroupLabels[profile.bloodGroup]}
+                    </span>
                 </div>
 
                 {/* Eligibility Status */}
@@ -202,7 +202,7 @@ export function DonorProfilePage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                    <span>{getBatchLabel(profile.batch)}</span>
+                    <span>{profile.batch ? getBatchLabel(profile.batch) : 'Not Specified'}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
