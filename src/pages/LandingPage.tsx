@@ -277,8 +277,8 @@ export function LandingPage() {
               About NITER Blood Bridge
             </h2>
             <p className="text-muted-foreground mb-8 leading-relaxed">
-              NITER Blood Bridge is a platform built for the <span className="font-bold">NITER</span> community. Our
-              mission is to create a reliable network of blood donors within our
+              NITER Blood Bridge is a platform built for the <span className="font-bold">NITERIANs</span>. Our
+              mission is to create a reliable network of blood donors within our  
               campus, making it easier to find help during medical emergencies.
             </p>
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">

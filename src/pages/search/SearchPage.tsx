@@ -334,10 +334,9 @@ export function SearchPage() {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="recent">Recently Active</SelectItem>
               <SelectItem value="eligible">Eligible First</SelectItem>
               <SelectItem value="donations">Most Donations</SelectItem>
-              <SelectItem value="recent">Recently Active</SelectItem>
-              <SelectItem value="batch">Same Batch</SelectItem>
             </SelectContent>
           </Select>
 

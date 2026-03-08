@@ -37,7 +37,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 const bloodGroups: BloodGroup[] = ['A_POS', 'A_NEG', 'B_POS', 'B_NEG', 'AB_POS', 'AB_NEG', 'O_POS', 'O_NEG'];
-const departments: Department[] = ['TE', 'IP', 'EE', 'CS', 'FD'];
+const departments: Department[] = ['IP', 'TE', 'EE', 'CS', 'FD'];
 const batches = Array.from({ length: 16 }, (_, i) => i + 1);
 
 export function ProfileEditPage() {
@@ -47,7 +47,7 @@ export function ProfileEditPage() {
   
   const [formData, setFormData] = useState<ProfileFormData>({
     fullName: '',
-    department: 'TE',
+    department: 'IP',
     idNumber: '',
     batch: 10,
     phone: '',
@@ -360,7 +360,7 @@ export function ProfileEditPage() {
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full justify-start text-left font-normal',
+                          'w-1/2 justify-start text-left font-normal',
                           !formData.lastDonationDate && 'text-muted-foreground'
                         )}
                         disabled={formData.neverDonated}
@@ -402,7 +402,7 @@ export function ProfileEditPage() {
               </div>
 
               {/* Willing to Donate */}
-              <div className="space-y-4">
+              <div className="space-y-6 md:w-1/2">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-base">Willing to Donate</Label>
@@ -433,7 +433,7 @@ export function ProfileEditPage() {
           </div>
 
           {/* Section 4: Profile Photo */}
-          <div className="bg-card rounded-xl card-shadow p-6">
+          {/* <div className="bg-card rounded-xl card-shadow p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Camera className="h-5 w-5 text-primary" />
@@ -466,7 +466,7 @@ export function ProfileEditPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Submit Buttons */}
           <div className="flex items-center justify-end gap-4">
