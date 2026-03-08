@@ -65,15 +65,11 @@ export function useProfile(_userId: string | undefined) {
     return newProfile;
   }, []);
 
-  const updateProfile = useCallback(async (data: Partial<ProfileFormData>): Promise<DonorProfile | null> => {
-    try {
-      const updated = await api.put<DonorProfile>('/api/profiles/me', data);
-      setProfile(updated);
-      if (updated.seedMatched) setSeedMatched(true);
-      return updated;
-    } catch {
-      return null;
-    }
+  const updateProfile = useCallback(async (data: Partial<ProfileFormData>): Promise<DonorProfile> => {
+    const updated = await api.put<DonorProfile>('/api/profiles/me', data);
+    setProfile(updated);
+    if (updated.seedMatched) setSeedMatched(true);
+    return updated;
   }, []);
 
   const addDonation = useCallback(async (data: DonationFormData): Promise<DonationLog> => {
