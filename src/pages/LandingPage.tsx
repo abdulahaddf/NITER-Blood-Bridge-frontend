@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import {
   Droplets,
   Search,
@@ -17,6 +16,7 @@ import { BloodGroupLabels, type BloodGroup } from "@/types";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { usePublicStats } from "@/hooks/usePublicStats";
+import { Link } from "react-router-dom";
 
 const bloodGroupColors: Record<BloodGroup, string> = {
   A_POS: "bg-blue-500",
@@ -277,8 +277,7 @@ export function LandingPage() {
               About NITER Blood Bridge
             </h2>
             <p className="text-muted-foreground mb-8 leading-relaxed">
-              NITER Blood Bridge is a platform built for the National Institute
-              of Technical Teachers&apos; Education and Research community. Our
+              NITER Blood Bridge is a platform built for the <span className="font-bold">NITER</span> community. Our
               mission is to create a reliable network of blood donors within our
               campus, making it easier to find help during medical emergencies.
             </p>
@@ -328,23 +327,9 @@ export function LandingPage() {
               <span className="font-bold">NITER Blood Bridge</span>
             </div>
             <p className="text-sm text-muted-foreground text-center">
-              National Institute of Technical Teachers&apos; Education and
-              Research, Bangladesh
+              National Institute of Textile Engineering and Research <span className="font-bold">(NITER)</span> <br /> Nayathat, Dhaka, Bangladesh
             </p>
-            <div className="flex items-center gap-4">
-              <Link
-                to="/login"
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                Register
-              </Link>
-            </div>
+          <p>Made for the Brotherhood by <a href="https://abdulahaddf.vercel.app/" target="_blank">AHAD</a>  </p>
           </div>
         </div>
       </footer>
