@@ -34,7 +34,9 @@ export function LoginPage() {
 
       if (result.success) {
         toast.success("Welcome back!");
-        navigate("/search");
+        const from = localStorage.getItem('auth_redirect_from') || "/search";
+        localStorage.removeItem('auth_redirect_from');
+        navigate(from, { replace: true });
       } else {
         setError(result.error || "Login failed");
       }

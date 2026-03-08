@@ -94,6 +94,25 @@ export function ProfilePage() {
     );
   }
 
+  // Auto-created profile (e.g. from Google login) - redirect to edit
+  if (!profile.profileComplete) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <Droplets className="h-12 w-12 text-primary mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Complete Your Profile</h2>
+          <p className="text-muted-foreground mb-6">
+            Your account has been created! Please fill in your details to start connecting with blood donors.
+          </p>
+          <Button onClick={() => navigate('/profile/edit')} className="btn-primary">
+            <Edit2 className="h-4 w-4 mr-2" />
+            Complete Profile
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const eligibility = calculateEligibility(profile);
 
   const handleAddDonation = async () => {
@@ -149,7 +168,7 @@ export function ProfilePage() {
                         />
                       ) : (
                         <div className={`w-full h-full ${bloodGroupColors[profile.bloodGroup]} flex items-center justify-center text-white text-2xl font-bold`}>
-                          {profile.fullName.charAt(0).toUpperCase()}
+                          {profile?.fullName?.charAt(0)?.toUpperCase()}
                         </div>
                       )}
                     </div>
@@ -312,7 +331,7 @@ export function ProfilePage() {
                 </Button>
               </div>
 
-              {profile.donationHistory.length === 0 ? (
+              {profile?.donationHistory?.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                     <Droplets className="h-8 w-8 text-muted-foreground" />
@@ -328,7 +347,7 @@ export function ProfilePage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {profile.donationHistory.map((donation) => (
+                  {profile?.donationHistory?.map((donation) => (
                     <div 
                       key={donation.id} 
                       className="flex items-start gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors"

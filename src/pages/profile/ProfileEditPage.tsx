@@ -61,24 +61,26 @@ export function ProfileEditPage() {
     availabilityNote: '',
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const [localSeedMatch, setLocalSeedMatch] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
       setFormData({
-        fullName: profile.fullName,
-        department: profile.department,
-        idNumber: profile.idNumber,
-        batch: profile.batch,
-        phone: profile.phone,
-        email: profile.email,
-        currentLocation: profile.currentLocation,
-        hometown: profile.hometown,
-        bloodGroup: profile.bloodGroup,
+        fullName: profile.fullName || '',
+        department: profile.department || 'TE',
+        idNumber: profile.idNumber || '',
+        batch: profile.batch || 10,
+        phone: profile.phone || '',
+        email: profile.email || auth.user?.email || '',
+        currentLocation: profile.currentLocation || '',
+        hometown: profile.hometown || '',
+        bloodGroup: profile.bloodGroup || 'O_POS',
         lastDonationDate: profile.lastDonationDate,
         neverDonated: !profile.lastDonationDate,
-        willingToDonate: profile.willingToDonate,
+        willingToDonate: profile.willingToDonate ?? true,
         availabilityNote: profile.availabilityNote || '',
       });
       setLocalSeedMatch(profile.seedMatched);
@@ -86,11 +88,11 @@ export function ProfileEditPage() {
         setPhotoPreview(profile.profilePhoto);
       }
     }
-  }, [profile]);
+  }, [profile, auth.user?.email]);
 
   // Check seed match when department or idNumber changes
   useEffect(() => {
-    if (formData.department && formData.idNumber.length >= 5) {
+    if (formData.department && formData?.idNumber?.length >= 5) {
       const timer = setTimeout(async () => {
         const matched = await checkSeedMatch(formData.department, formData.idNumber);
         setLocalSeedMatch(matched);
@@ -103,9 +105,11 @@ export function ProfileEditPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
     
     try {
       if (profile) {
+        // Profile exists (could be auto-created or complete) — always update
         await updateProfile(formData);
         toast.success('Profile updated successfully!');
       } else {
@@ -115,6 +119,8 @@ export function ProfileEditPage() {
       navigate('/profile');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to save profile');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -230,7 +236,7 @@ export function ProfileEditPage() {
               <div className="space-y-2">
                 <Label>Batch</Label>
                 <Select
-                  value={formData.batch.toString()}
+                  value={formData.batch?.toString()}
                   onValueChange={(value) => setFormData({ ...formData, batch: parseInt(value) })}
                 >
                   <SelectTrigger>
@@ -471,8 +477,12 @@ export function ProfileEditPage() {
             >
               Cancel
             </Button>
-            <Button type="submit" className="btn-primary">
-              <Check className="h-4 w-4 mr-2" />
+            <Button type="submit" className="btn-primary" disabled={isSaving}>
+              {isSaving ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+              ) : (
+                <Check className="h-4 w-4 mr-2" />
+              )}
               {profile ? 'Save Changes' : 'Create Profile'}
             </Button>
           </div>

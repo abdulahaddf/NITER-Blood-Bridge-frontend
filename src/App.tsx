@@ -26,6 +26,8 @@ import { AdminDeletionsPage } from '@/pages/admin/AdminDeletionsPage';
 import { AdminSeedDataPage } from '@/pages/admin/AdminSeedDataPage';
 import { AdminAnalyticsPage } from '@/pages/admin/AdminAnalyticsPage';
 import { AdminBroadcastPage } from '@/pages/admin/AdminBroadcastPage';
+import { AuthCallbackPage } from '@/pages/auth/AuthCallbackPage';
+import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
 
 import type { AuthContextType } from '@/hooks/useAuth';
 
@@ -53,6 +55,8 @@ const ProtectedRoute = ({ children, requiredRoles }: { children: React.ReactNode
   }
   
   if (!auth.isAuthenticated) {
+    // Save current location for redirect after login
+    localStorage.setItem('auth_redirect_from', window.location.pathname);
     return <Navigate to="/login" replace />;
   }
   
@@ -97,6 +101,8 @@ function AppContent() {
             <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
             <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
             <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="/verify" element={<VerifyEmailPage />} />
           </Route>
 
           {/* Protected Routes */}

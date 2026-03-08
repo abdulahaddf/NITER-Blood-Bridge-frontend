@@ -169,7 +169,7 @@ export function Navbar() {
                   <div className="flex flex-col">
                     <span className="font-medium">{auth.user?.email}</span>
                     <span className="text-xs text-muted-foreground capitalize">
-                      {auth.user?.role.toLowerCase().replace("_", " ")}
+                      {auth.user?.role?.toLowerCase().replace("_", " ")}
                     </span>
                   </div>
                 </DropdownMenuLabel>

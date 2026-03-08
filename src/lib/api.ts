@@ -60,19 +60,28 @@ axiosInstance.interceptors.response.use(
 
 type Params = Record<string, string | number | boolean | string[] | undefined | null>;
 
+// The backend's TransformInterceptor wraps responses as { data, message }.
+// This helper unwraps that layer so hooks get the actual data.
+function unwrap<T>(response: any): T {
+  if (response && typeof response === 'object' && 'data' in response && 'message' in response) {
+    return response.data as T;
+  }
+  return response as T;
+}
+
 export const api = {
   get: <T>(path: string, params?: Params) =>
-    axiosInstance.get<T>(path, { params }).then(r => r.data),
+    axiosInstance.get<T>(path, { params }).then(r => unwrap<T>(r.data)),
 
   post: <T>(path: string, body?: unknown, params?: Params) =>
-    axiosInstance.post<T>(path, body, { params }).then(r => r.data),
+    axiosInstance.post<T>(path, body, { params }).then(r => unwrap<T>(r.data)),
 
   put: <T>(path: string, body?: unknown) =>
-    axiosInstance.put<T>(path, body).then(r => r.data),
+    axiosInstance.put<T>(path, body).then(r => unwrap<T>(r.data)),
 
   patch: <T>(path: string, body?: unknown) =>
-    axiosInstance.patch<T>(path, body).then(r => r.data),
+    axiosInstance.patch<T>(path, body).then(r => unwrap<T>(r.data)),
 
   delete: <T>(path: string) =>
-    axiosInstance.delete<T>(path).then(r => r.data),
+    axiosInstance.delete<T>(path).then(r => unwrap<T>(r.data)),
 };
