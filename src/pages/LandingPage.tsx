@@ -1,30 +1,30 @@
-import { Link } from 'react-router-dom';
-import { 
-  Droplets, 
-  Search, 
-  UserPlus, 
-  Shield, 
+import { Link } from "react-router-dom";
+import {
+  Droplets,
+  Search,
+  UserPlus,
+  Shield,
   Heart,
   ChevronRight,
   Users,
   Activity,
-  Droplet
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { bloodGroupStats, dashboardStats } from '@/data/mockData';
-import { BloodGroupLabels, type BloodGroup } from '@/types';
-import { motion } from 'framer-motion';
+  Droplet,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { bloodGroupStats, dashboardStats } from "@/data/mockData";
+import { BloodGroupLabels, type BloodGroup } from "@/types";
+import { motion } from "framer-motion";
 
 const bloodGroupColors: Record<BloodGroup, string> = {
-  A_POS: 'bg-blue-500',
-  A_NEG: 'bg-blue-700',
-  B_POS: 'bg-orange-500',
-  B_NEG: 'bg-orange-700',
-  AB_POS: 'bg-purple-500',
-  AB_NEG: 'bg-purple-700',
-  O_POS: 'bg-green-500',
-  O_NEG: 'bg-green-700',
+  A_POS: "bg-blue-500",
+  A_NEG: "bg-blue-700",
+  B_POS: "bg-orange-500",
+  B_NEG: "bg-orange-700",
+  AB_POS: "bg-purple-500",
+  AB_NEG: "bg-purple-700",
+  O_POS: "bg-green-500",
+  O_NEG: "bg-green-700",
 };
 
 export function LandingPage() {
@@ -36,11 +36,11 @@ export function LandingPage() {
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2 text-primary">
               <Droplets className="h-7 w-7" />
-              <span className="font-bold text-lg">NITER Blood Connect</span>
+              <span className="font-bold text-lg">NITER Blood Bridge</span>
             </Link>
             <div className="flex items-center gap-4">
-              <Link 
-                to="/login" 
+              <Link
+                to="/login"
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 Log in
@@ -101,8 +101,8 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
             >
-              Find a blood donor at{' '}
-              <span className="text-primary">NITER</span> — instantly
+              Find a blood donor at <span className="text-primary">NITER</span>{" "}
+              — instantly
             </motion.h1>
 
             <motion.p
@@ -111,8 +111,8 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto"
             >
-              A verified community of donors within our campus. Every second matters 
-              when lives are at stake. Join our network of heroes today.
+              A verified community of donors within our campus. Every second
+              matters when lives are at stake. Join our network of heroes today.
             </motion.p>
 
             <motion.div
@@ -127,7 +127,12 @@ export function LandingPage() {
                   Find a Donor
                 </Link>
               </Button>
-              <Button asChild size="lg" variant="outline" className="btn-outline text-lg px-8">
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="btn-outline text-lg px-8"
+              >
                 <Link to="/register">
                   <UserPlus className="h-5 w-5 mr-2" />
                   Become a Donor
@@ -146,17 +151,25 @@ export function LandingPage() {
                 <div className="text-3xl md:text-4xl font-bold text-primary">
                   {dashboardStats.totalUsers}+
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">Total Donors</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Total Donors
+                </div>
               </div>
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-primary">
                   {dashboardStats.eligibleDonors}
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">Currently Eligible</div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Currently Eligible
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold text-primary">8</div>
-                <div className="text-sm text-muted-foreground mt-1">Blood Groups</div>
+                <div className="text-3xl md:text-4xl font-bold text-primary">
+                  8
+                </div>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Blood Groups
+                </div>
               </div>
             </motion.div>
           </div>
@@ -169,7 +182,8 @@ export function LandingPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Available Blood Groups</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Our community has donors from all blood groups. Click on any group to find eligible donors.
+              Our community has donors from all blood groups. Click on any group
+              to find eligible donors.
             </p>
           </div>
 
@@ -185,13 +199,19 @@ export function LandingPage() {
                 <Link to="/login">
                   <div className="bg-card rounded-xl p-6 card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1">
                     <div className="flex items-center justify-between mb-4">
-                      <span className={`blood-group-badge ${bloodGroupColors[stat.bloodGroup]}`}>
+                      <span
+                        className={`blood-group-badge ${bloodGroupColors[stat.bloodGroup]}`}
+                      >
                         {BloodGroupLabels[stat.bloodGroup]}
                       </span>
                       <Droplet className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    <div className="text-2xl font-bold">{stat.eligibleCount}</div>
-                    <div className="text-sm text-muted-foreground">Eligible Donors</div>
+                    <div className="text-2xl font-bold">
+                      {stat.eligibleCount}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Eligible Donors
+                    </div>
                   </div>
                 </Link>
               </motion.div>
@@ -214,21 +234,24 @@ export function LandingPage() {
             {[
               {
                 icon: UserPlus,
-                title: 'Register & Verify Email',
-                description: 'Create your account with your email and verify it to get started.',
-                step: '01',
+                title: "Register & Verify Email",
+                description:
+                  "Create your account with your email and verify it to get started.",
+                step: "01",
               },
               {
                 icon: Users,
-                title: 'Complete Your Donor Profile',
-                description: 'Add your details, blood group, and availability information.',
-                step: '02',
+                title: "Complete Your Donor Profile",
+                description:
+                  "Add your details, blood group, and availability information.",
+                step: "02",
               },
               {
                 icon: Activity,
-                title: 'Get Found in Search',
-                description: 'Once verified, you will appear in search results when someone needs your blood type.',
-                step: '03',
+                title: "Get Found in Search",
+                description:
+                  "Once verified, you will appear in search results when someone needs your blood type.",
+                step: "03",
               },
             ].map((item, index) => (
               <motion.div
@@ -261,16 +284,21 @@ export function LandingPage() {
       <section className="py-20 bg-muted/30">
         <div className="container-max section-padding">
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-6">About NITER Blood Connect</h2>
+            <h2 className="text-3xl font-bold mb-6">
+              About NITER Blood Bridge
+            </h2>
             <p className="text-muted-foreground mb-8 leading-relaxed">
-              NITER Blood Connect is a platform built for the National Institute of Technical 
-              Teachers&apos; Education and Research community. Our mission is to create a reliable 
-              network of blood donors within our campus, making it easier to find help during 
-              medical emergencies.
+              NITER Blood Bridge is a platform built for the National Institute
+              of Technical Teachers&apos; Education and Research community. Our
+              mission is to create a reliable network of blood donors within our
+              campus, making it easier to find help during medical emergencies.
             </p>
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Shield className="h-5 w-5 text-primary" />
-              <span>Your phone number is never shown publicly. Contact is only shared with logged-in verified members.</span>
+              <span>
+                Your phone number is never shown publicly. Contact is only
+                shared with logged-in verified members.
+              </span>
             </div>
           </div>
         </div>
@@ -284,10 +312,15 @@ export function LandingPage() {
               Ready to Save Lives?
             </h2>
             <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-              Join our community of donors today. Your contribution can make the difference 
-              between life and death for someone in need.
+              Join our community of donors today. Your contribution can make the
+              difference between life and death for someone in need.
             </p>
-            <Button asChild size="lg" variant="secondary" className="text-lg px-8">
+            <Button
+              asChild
+              size="lg"
+              variant="secondary"
+              className="text-lg px-8"
+            >
               <Link to="/register">
                 Become a Donor Now
                 <ChevronRight className="h-5 w-5 ml-2" />
@@ -303,16 +336,23 @@ export function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-primary">
               <Droplets className="h-6 w-6" />
-              <span className="font-bold">NITER Blood Connect</span>
+              <span className="font-bold">NITER Blood Bridge</span>
             </div>
             <p className="text-sm text-muted-foreground text-center">
-              National Institute of Technical Teachers&apos; Education and Research, Bangladesh
+              National Institute of Technical Teachers&apos; Education and
+              Research, Bangladesh
             </p>
             <div className="flex items-center gap-4">
-              <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground">
+              <Link
+                to="/login"
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
                 Login
               </Link>
-              <Link to="/register" className="text-sm text-muted-foreground hover:text-foreground">
+              <Link
+                to="/register"
+                className="text-sm text-muted-foreground hover:text-foreground"
+              >
                 Register
               </Link>
             </div>

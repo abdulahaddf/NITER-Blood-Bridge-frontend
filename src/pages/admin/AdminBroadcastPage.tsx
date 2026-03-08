@@ -1,46 +1,52 @@
-import { useState } from 'react';
-import { 
-  Send, 
-  Users, 
-  Droplets, 
-  Shield,
-  Eye,
-  History
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useState } from "react";
+import { Send, Users, Droplets, Shield, Eye, History } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { bloodGroupStats } from '@/data/mockData';
-import { BloodGroupLabels, type BloodGroup } from '@/types';
-import { toast } from 'sonner';
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { bloodGroupStats } from "@/data/mockData";
+import { BloodGroupLabels, type BloodGroup } from "@/types";
+import { toast } from "sonner";
 
-const bloodGroups: BloodGroup[] = ['A_POS', 'A_NEG', 'B_POS', 'B_NEG', 'AB_POS', 'AB_NEG', 'O_POS', 'O_NEG'];
+const bloodGroups: BloodGroup[] = [
+  "A_POS",
+  "A_NEG",
+  "B_POS",
+  "B_NEG",
+  "AB_POS",
+  "AB_NEG",
+  "O_POS",
+  "O_NEG",
+];
 
 export function AdminBroadcastPage() {
-  const [target, setTarget] = useState<'all' | 'blood-group' | 'admins'>('all');
-  const [selectedBloodGroup, setSelectedBloodGroup] = useState<BloodGroup>('O_POS');
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
+  const [target, setTarget] = useState<"all" | "blood-group" | "admins">("all");
+  const [selectedBloodGroup, setSelectedBloodGroup] =
+    useState<BloodGroup>("O_POS");
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
   const [isPreview, setIsPreview] = useState(false);
 
   const getRecipientCount = () => {
     switch (target) {
-      case 'all':
+      case "all":
         return 73;
-      case 'blood-group':
-        return bloodGroupStats.find(s => s.bloodGroup === selectedBloodGroup)?.count || 0;
-      case 'admins':
+      case "blood-group":
+        return (
+          bloodGroupStats.find((s) => s.bloodGroup === selectedBloodGroup)
+            ?.count || 0
+        );
+      case "admins":
         return 3;
       default:
         return 0;
@@ -49,15 +55,33 @@ export function AdminBroadcastPage() {
 
   const handleSend = () => {
     toast.success(`Broadcast sent to ${getRecipientCount()} recipients!`);
-    setTitle('');
-    setMessage('');
+    setTitle("");
+    setMessage("");
     setIsPreview(false);
   };
 
   const pastBroadcasts = [
-    { id: '1', title: 'Urgent: O- Blood Needed', recipients: 6, date: '2024-07-15', type: 'blood-group' },
-    { id: '2', title: 'System Maintenance Notice', recipients: 73, date: '2024-07-10', type: 'all' },
-    { id: '3', title: 'New Features Available', recipients: 73, date: '2024-07-05', type: 'all' },
+    {
+      id: "1",
+      title: "Urgent: O- Blood Needed",
+      recipients: 6,
+      date: "2024-07-15",
+      type: "blood-group",
+    },
+    {
+      id: "2",
+      title: "System Maintenance Notice",
+      recipients: 73,
+      date: "2024-07-10",
+      type: "all",
+    },
+    {
+      id: "3",
+      title: "New Features Available",
+      recipients: 73,
+      date: "2024-07-05",
+      type: "all",
+    },
   ];
 
   return (
@@ -65,9 +89,7 @@ export function AdminBroadcastPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold">Broadcast</h1>
-        <p className="text-muted-foreground">
-          Send notifications to users
-        </p>
+        <p className="text-muted-foreground">Send notifications to users</p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
@@ -84,15 +106,15 @@ export function AdminBroadcastPage() {
               {/* Target Audience */}
               <div className="space-y-3">
                 <Label>Target Audience</Label>
-                <RadioGroup 
-                  value={target} 
+                <RadioGroup
+                  value={target}
                   onValueChange={(v) => setTarget(v as typeof target)}
                   className="grid grid-cols-3 gap-4"
                 >
                   <div>
-                    <RadioGroupItem 
-                      value="all" 
-                      id="all" 
+                    <RadioGroupItem
+                      value="all"
+                      id="all"
                       className="peer sr-only"
                     />
                     <Label
@@ -104,9 +126,9 @@ export function AdminBroadcastPage() {
                     </Label>
                   </div>
                   <div>
-                    <RadioGroupItem 
-                      value="blood-group" 
-                      id="blood-group" 
+                    <RadioGroupItem
+                      value="blood-group"
+                      id="blood-group"
                       className="peer sr-only"
                     />
                     <Label
@@ -118,9 +140,9 @@ export function AdminBroadcastPage() {
                     </Label>
                   </div>
                   <div>
-                    <RadioGroupItem 
-                      value="admins" 
-                      id="admins" 
+                    <RadioGroupItem
+                      value="admins"
+                      id="admins"
                       className="peer sr-only"
                     />
                     <Label
@@ -135,12 +157,14 @@ export function AdminBroadcastPage() {
               </div>
 
               {/* Blood Group Selection */}
-              {target === 'blood-group' && (
+              {target === "blood-group" && (
                 <div className="space-y-2">
                   <Label>Select Blood Group</Label>
-                  <Select 
-                    value={selectedBloodGroup} 
-                    onValueChange={(v) => setSelectedBloodGroup(v as BloodGroup)}
+                  <Select
+                    value={selectedBloodGroup}
+                    onValueChange={(v) =>
+                      setSelectedBloodGroup(v as BloodGroup)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -187,14 +211,14 @@ export function AdminBroadcastPage() {
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setIsPreview(!isPreview)}
                   >
                     <Eye className="h-4 w-4 mr-2" />
-                    {isPreview ? 'Edit' : 'Preview'}
+                    {isPreview ? "Edit" : "Preview"}
                   </Button>
-                  <Button 
+                  <Button
                     onClick={handleSend}
                     disabled={!title || !message}
                     className="btn-primary"
@@ -223,13 +247,15 @@ export function AdminBroadcastPage() {
                       <Send className="h-4 w-4 text-white" />
                     </div>
                     <div>
-                      <p className="font-medium">NITER Blood Connect</p>
+                      <p className="font-medium">NITER Blood Bridge</p>
                       <p className="text-xs text-muted-foreground">Just now</p>
                     </div>
                   </div>
-                  <h4 className="font-semibold mb-2">{title || 'Notification Title'}</h4>
+                  <h4 className="font-semibold mb-2">
+                    {title || "Notification Title"}
+                  </h4>
                   <p className="text-sm text-muted-foreground">
-                    {message || 'Your message will appear here...'}
+                    {message || "Your message will appear here..."}
                   </p>
                 </div>
               </CardContent>
@@ -247,8 +273,8 @@ export function AdminBroadcastPage() {
             <CardContent>
               <div className="space-y-3">
                 {pastBroadcasts.map((broadcast) => (
-                  <div 
-                    key={broadcast.id} 
+                  <div
+                    key={broadcast.id}
                     className="flex items-center justify-between p-3 rounded-lg border"
                   >
                     <div>
@@ -258,8 +284,11 @@ export function AdminBroadcastPage() {
                       </p>
                     </div>
                     <Badge variant="secondary">
-                      {broadcast.type === 'all' ? 'All' : 
-                       broadcast.type === 'admins' ? 'Admins' : 'Blood Group'}
+                      {broadcast.type === "all"
+                        ? "All"
+                        : broadcast.type === "admins"
+                          ? "Admins"
+                          : "Blood Group"}
                     </Badge>
                   </div>
                 ))}

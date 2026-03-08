@@ -1,14 +1,17 @@
-import { Outlet, Link } from 'react-router-dom';
-import { Droplets } from 'lucide-react';
+import { Outlet, Link } from "react-router-dom";
+import { Droplets } from "lucide-react";
 
 export function AuthLayout() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 flex flex-col">
       {/* Header */}
       <header className="w-full p-6">
-        <Link to="/" className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity"
+        >
           <Droplets className="h-8 w-8" />
-          <span className="text-xl font-bold">NITER Blood Connect</span>
+          <span className="text-xl font-bold">NITER Blood Bridge</span>
         </Link>
       </header>
 
@@ -21,7 +24,10 @@ export function AuthLayout() {
 
       {/* Footer */}
       <footer className="w-full p-6 text-center text-sm text-muted-foreground">
-        <p>National Institute of Technical Teachers' Education and Research, Bangladesh</p>
+        <p>
+          National Institute of Technical Teachers' Education and Research,
+          Bangladesh
+        </p>
       </footer>
     </div>
   );

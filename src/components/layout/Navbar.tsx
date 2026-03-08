@@ -1,18 +1,18 @@
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Droplets, 
-  Search, 
-  User, 
-  LogOut, 
-  Bell, 
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Droplets,
+  Search,
+  User,
+  LogOut,
+  Bell,
   Menu,
   Shield,
-  HeartPulse
-} from 'lucide-react';
-import { useState } from 'react';
-import { useAuthContext } from '@/App';
-import { useNotifications } from '@/hooks/useNotifications';
-import { Button } from '@/components/ui/button';
+  HeartPulse,
+} from "lucide-react";
+import { useState } from "react";
+import { useAuthContext } from "@/App";
+import { useNotifications } from "@/hooks/useNotifications";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,30 +20,27 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from '@/components/ui/sheet';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const auth = useAuthContext();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications(auth.user?.id);
+  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+    useNotifications(auth.user?.id);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     auth.logout();
-    navigate('/');
+    navigate("/");
   };
 
   const navLinks = [
-    { path: '/search', label: 'Find Donors', icon: Search },
-    { path: '/profile', label: 'My Profile', icon: User },
+    { path: "/search", label: "Find Donors", icon: Search },
+    { path: "/profile", label: "My Profile", icon: User },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -53,9 +50,14 @@ export function Navbar() {
       <div className="container-max section-padding">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/search" className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
+          <Link
+            to="/search"
+            className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity"
+          >
             <Droplets className="h-7 w-7" />
-            <span className="font-bold text-lg hidden sm:inline">NITER Blood Connect</span>
+            <span className="font-bold text-lg hidden sm:inline">
+              NITER Blood Bridge
+            </span>
             <span className="font-bold text-lg sm:hidden">NBC</span>
           </Link>
 
@@ -66,10 +68,10 @@ export function Navbar() {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                   isActive(link.path)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
               >
                 <link.icon className="h-4 w-4" />
@@ -85,7 +87,7 @@ export function Navbar() {
               variant="ghost"
               size="sm"
               className="hidden sm:flex items-center gap-2 text-primary hover:text-primary hover:bg-primary/10"
-              onClick={() => navigate('/request-blood')}
+              onClick={() => navigate("/request-blood")}
             >
               <HeartPulse className="h-4 w-4" />
               <span className="hidden lg:inline">Request Blood</span>
@@ -97,8 +99,8 @@ export function Navbar() {
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
-                    <Badge 
-                      variant="destructive" 
+                    <Badge
+                      variant="destructive"
                       className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
                     >
                       {unreadCount}
@@ -110,7 +112,7 @@ export function Navbar() {
                 <DropdownMenuLabel className="flex items-center justify-between">
                   <span>Notifications</span>
                   {unreadCount > 0 && (
-                    <button 
+                    <button
                       onClick={markAllAsRead}
                       className="text-xs text-primary hover:underline"
                     >
@@ -128,8 +130,8 @@ export function Navbar() {
                     <DropdownMenuItem
                       key={notification.id}
                       className={cn(
-                        'flex flex-col items-start gap-1 p-3 cursor-pointer',
-                        !notification.read && 'bg-muted/50'
+                        "flex flex-col items-start gap-1 p-3 cursor-pointer",
+                        !notification.read && "bg-muted/50",
                       )}
                       onClick={() => {
                         markAsRead(notification.id);
@@ -138,7 +140,9 @@ export function Navbar() {
                         }
                       }}
                     >
-                      <span className="font-medium text-sm">{notification.title}</span>
+                      <span className="font-medium text-sm">
+                        {notification.title}
+                      </span>
                       <span className="text-xs text-muted-foreground line-clamp-2">
                         {notification.message}
                       </span>
@@ -165,23 +169,27 @@ export function Navbar() {
                   <div className="flex flex-col">
                     <span className="font-medium">{auth.user?.email}</span>
                     <span className="text-xs text-muted-foreground capitalize">
-                      {auth.user?.role.toLowerCase().replace('_', ' ')}
+                      {auth.user?.role.toLowerCase().replace("_", " ")}
                     </span>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                <DropdownMenuItem onClick={() => navigate("/profile")}>
                   <User className="h-4 w-4 mr-2" />
                   My Profile
                 </DropdownMenuItem>
-                {(auth.user?.role === 'ADMIN' || auth.user?.role === 'SUPER_ADMIN') && (
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                {(auth.user?.role === "ADMIN" ||
+                  auth.user?.role === "SUPER_ADMIN") && (
+                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                     <Shield className="h-4 w-4 mr-2" />
                     Admin Dashboard
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="text-destructive"
+                >
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout
                 </DropdownMenuItem>
@@ -203,10 +211,10 @@ export function Navbar() {
                       to={link.path}
                       onClick={() => setMobileMenuOpen(false)}
                       className={cn(
-                        'flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors',
+                        "flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors",
                         isActive(link.path)
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted",
                       )}
                     >
                       <link.icon className="h-5 w-5" />
@@ -216,14 +224,15 @@ export function Navbar() {
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      navigate('/request-blood');
+                      navigate("/request-blood");
                     }}
                     className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-primary bg-primary/10"
                   >
                     <HeartPulse className="h-5 w-5" />
                     Request Blood
                   </button>
-                  {(auth.user?.role === 'ADMIN' || auth.user?.role === 'SUPER_ADMIN') && (
+                  {(auth.user?.role === "ADMIN" ||
+                    auth.user?.role === "SUPER_ADMIN") && (
                     <Link
                       to="/dashboard"
                       onClick={() => setMobileMenuOpen(false)}

@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, User, Check, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuthContext } from '@/App';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Mail, Lock, User, Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuthContext } from "@/App";
+import { toast } from "sonner";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -14,12 +14,12 @@ export function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    fullName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const passwordStrength = () => {
@@ -35,31 +35,31 @@ export function RegisterPage() {
 
   const getStrengthColor = () => {
     const strength = passwordStrength();
-    if (strength <= 2) return 'bg-red-500';
-    if (strength <= 3) return 'bg-yellow-500';
-    if (strength <= 4) return 'bg-blue-500';
-    return 'bg-green-500';
+    if (strength <= 2) return "bg-red-500";
+    if (strength <= 3) return "bg-yellow-500";
+    if (strength <= 4) return "bg-blue-500";
+    return "bg-green-500";
   };
 
   const getStrengthLabel = () => {
     const strength = passwordStrength();
-    if (strength <= 2) return 'Weak';
-    if (strength <= 3) return 'Fair';
-    if (strength <= 4) return 'Good';
-    return 'Strong';
+    if (strength <= 2) return "Weak";
+    if (strength <= 3) return "Fair";
+    if (strength <= 4) return "Good";
+    return "Strong";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError("Password must be at least 8 characters");
       return;
     }
 
@@ -74,20 +74,20 @@ export function RegisterPage() {
       });
 
       if (result.success) {
-        toast.success('Account created successfully!');
-        navigate('/profile/edit');
+        toast.success("Account created successfully!");
+        navigate("/profile/edit");
       } else {
-        setError(result.error || 'Registration failed');
+        setError(result.error || "Registration failed");
       }
     } catch {
-      setError('An unexpected error occurred');
+      setError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleRegister = () => {
-    toast.info('Google OAuth would open here in production');
+    toast.info("Google OAuth would open here in production");
   };
 
   return (
@@ -96,7 +96,7 @@ export function RegisterPage() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">Create Account</h1>
           <p className="text-muted-foreground">
-            Join the NITER Blood Connect community
+            Join the NITER Blood Bridge community
           </p>
         </div>
 
@@ -117,7 +117,9 @@ export function RegisterPage() {
                 type="text"
                 placeholder="Enter your full name"
                 value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, fullName: e.target.value })
+                }
                 className="pl-10"
                 required
               />
@@ -133,7 +135,9 @@ export function RegisterPage() {
                 type="email"
                 placeholder="you@example.com"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 className="pl-10"
                 required
               />
@@ -146,10 +150,12 @@ export function RegisterPage() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="Create a password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 className="pl-10 pr-10"
                 required
               />
@@ -158,37 +164,56 @@ export function RegisterPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
-            
+
             {/* Password Strength Indicator */}
             {formData.password && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                    <div 
+                    <div
                       className={`h-full transition-all duration-300 ${getStrengthColor()}`}
                       style={{ width: `${(passwordStrength() / 5) * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs text-muted-foreground">{getStrengthLabel()}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {getStrengthLabel()}
+                  </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {[
-                    { label: '8+ chars', met: formData.password.length >= 8 },
-                    { label: 'Uppercase', met: /[A-Z]/.test(formData.password) },
-                    { label: 'Lowercase', met: /[a-z]/.test(formData.password) },
-                    { label: 'Number', met: /[0-9]/.test(formData.password) },
-                    { label: 'Special', met: /[^A-Za-z0-9]/.test(formData.password) },
+                    { label: "8+ chars", met: formData.password.length >= 8 },
+                    {
+                      label: "Uppercase",
+                      met: /[A-Z]/.test(formData.password),
+                    },
+                    {
+                      label: "Lowercase",
+                      met: /[a-z]/.test(formData.password),
+                    },
+                    { label: "Number", met: /[0-9]/.test(formData.password) },
+                    {
+                      label: "Special",
+                      met: /[^A-Za-z0-9]/.test(formData.password),
+                    },
                   ].map((req) => (
                     <span
                       key={req.label}
                       className={`text-xs flex items-center gap-1 ${
-                        req.met ? 'text-green-600' : 'text-muted-foreground'
+                        req.met ? "text-green-600" : "text-muted-foreground"
                       }`}
                     >
-                      {req.met ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                      {req.met ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <X className="h-3 w-3" />
+                      )}
                       {req.label}
                     </span>
                   ))}
@@ -203,10 +228,12 @@ export function RegisterPage() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="confirmPassword"
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, confirmPassword: e.target.value })
+                }
                 className="pl-10 pr-10"
                 required
               />
@@ -215,23 +242,28 @@ export function RegisterPage() {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
-            {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-              <p className="text-xs text-red-500">Passwords do not match</p>
-            )}
+            {formData.confirmPassword &&
+              formData.password !== formData.confirmPassword && (
+                <p className="text-xs text-red-500">Passwords do not match</p>
+              )}
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full btn-primary"
             disabled={isLoading}
           >
             {isLoading ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
             ) : (
-              'Create Account'
+              "Create Account"
             )}
           </Button>
         </form>
@@ -241,12 +273,14 @@ export function RegisterPage() {
             <div className="w-full border-t"></div>
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+            <span className="bg-card px-2 text-muted-foreground">
+              Or continue with
+            </span>
           </div>
         </div>
 
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="w-full"
           onClick={handleGoogleRegister}
         >
@@ -272,8 +306,11 @@ export function RegisterPage() {
         </Button>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Already have an account?{' '}
-          <Link to="/login" className="text-primary hover:underline font-medium">
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            className="text-primary hover:underline font-medium"
+          >
             Log in
           </Link>
         </p>

@@ -1,29 +1,29 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useAuthContext } from '@/App';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuthContext } from "@/App";
+import { toast } from "sonner";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const auth = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
     rememberMe: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     try {
@@ -33,13 +33,13 @@ export function LoginPage() {
       });
 
       if (result.success) {
-        toast.success('Welcome back!');
-        navigate('/search');
+        toast.success("Welcome back!");
+        navigate("/search");
       } else {
-        setError(result.error || 'Login failed');
+        setError(result.error || "Login failed");
       }
     } catch {
-      setError('An unexpected error occurred');
+      setError("An unexpected error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +47,7 @@ export function LoginPage() {
 
   const handleGoogleLogin = () => {
     // For demo purposes, we'll simulate Google login with the first mock user
-    toast.info('Google OAuth would open here in production');
+    toast.info("Google OAuth would open here in production");
   };
 
   return (
@@ -56,7 +56,7 @@ export function LoginPage() {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold mb-2">Welcome Back</h1>
           <p className="text-muted-foreground">
-            Sign in to your NITER Blood Connect account
+            Sign in to your NITER Blood Bridge account
           </p>
         </div>
 
@@ -77,7 +77,9 @@ export function LoginPage() {
                 type="email"
                 placeholder="you@example.com"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 className="pl-10"
                 required
               />
@@ -90,10 +92,12 @@ export function LoginPage() {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 id="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 className="pl-10 pr-10"
                 required
               />
@@ -102,7 +106,11 @@ export function LoginPage() {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
@@ -112,31 +120,34 @@ export function LoginPage() {
               <Checkbox
                 id="remember"
                 checked={formData.rememberMe}
-                onCheckedChange={(checked) => 
+                onCheckedChange={(checked) =>
                   setFormData({ ...formData, rememberMe: checked as boolean })
                 }
               />
-              <Label htmlFor="remember" className="text-sm font-normal cursor-pointer">
+              <Label
+                htmlFor="remember"
+                className="text-sm font-normal cursor-pointer"
+              >
                 Remember me
               </Label>
             </div>
-            <Link 
-              to="/forgot-password" 
+            <Link
+              to="/forgot-password"
               className="text-sm text-primary hover:underline"
             >
               Forgot password?
             </Link>
           </div>
 
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full btn-primary"
             disabled={isLoading}
           >
             {isLoading ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
             ) : (
-              'Sign In'
+              "Sign In"
             )}
           </Button>
         </form>
@@ -146,12 +157,14 @@ export function LoginPage() {
             <div className="w-full border-t"></div>
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+            <span className="bg-card px-2 text-muted-foreground">
+              Or continue with
+            </span>
           </div>
         </div>
 
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="w-full"
           onClick={handleGoogleLogin}
         >
@@ -177,18 +190,27 @@ export function LoginPage() {
         </Button>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          Don&apos;t have an account?{' '}
-          <Link to="/register" className="text-primary hover:underline font-medium">
+          Don&apos;t have an account?{" "}
+          <Link
+            to="/register"
+            className="text-primary hover:underline font-medium"
+          >
             Register
           </Link>
         </p>
 
         {/* Demo Credentials */}
         <div className="mt-8 p-4 bg-muted rounded-lg">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Demo Credentials:</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            Demo Credentials:
+          </p>
           <div className="text-xs text-muted-foreground space-y-1">
-            <p><strong>Admin:</strong> admin@niter.edu.bd / any password</p>
-            <p><strong>User:</strong> john.doe@gmail.com / any password</p>
+            <p>
+              <strong>Admin:</strong> admin@niter.edu.bd / any password
+            </p>
+            <p>
+              <strong>User:</strong> john.doe@gmail.com / any password
+            </p>
           </div>
         </div>
       </div>
