@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { bloodGroupStats, dashboardStats } from "@/data/mockData";
 import { BloodGroupLabels, type BloodGroup } from "@/types";
 import { motion } from "framer-motion";
+import { Navbar } from "@/components/layout/Navbar";
 
 const bloodGroupColors: Record<BloodGroup, string> = {
   A_POS: "bg-blue-500",
@@ -31,28 +32,8 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-      <nav className="w-full border-b bg-background/95 backdrop-blur-sm">
-        <div className="container-max section-padding">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2 text-primary">
-              <Droplets className="h-7 w-7" />
-              <span className="font-bold text-lg">NITER Blood Bridge</span>
-            </Link>
-            <div className="flex items-center gap-4">
-              <Link
-                to="/login"
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Log in
-              </Link>
-              <Button asChild className="btn-primary">
-                <Link to="/register">Get Started</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
+     
+    <Navbar/>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Animated Background */}
