@@ -13,6 +13,7 @@ interface DonorsApiResponse {
 export function useSearch() {
   const [profiles, setProfiles] = useState<DonorProfile[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
   const [filters, setFilters] = useState<DonorSearchFilters>({
@@ -60,8 +61,8 @@ export function useSearch() {
       sortBy: filters.sortBy,
       batchMin: filters.batchRange[0],
       batchMax: filters.batchRange[1],
-      page: 1,
-      limit: 100,
+      page: page,
+      limit: 60,
     };
 
     if (bloodGroupsToSend.length > 0) {
@@ -75,11 +76,13 @@ export function useSearch() {
       .then(response => {
         // Handle both paginated and array responses
         if (Array.isArray(response)) {
+          console.log(response);
           setProfiles(response);
           setTotal(response.length);
         } else {
           setProfiles(response.data ?? []);
-          setTotal(response.total ?? 0);
+          // @ts-ignore - The backend returns { data, meta: { total } }
+          setTotal(response.meta?.total ?? response.total ?? 0);
         }
       })
       .catch(err => {
@@ -89,10 +92,11 @@ export function useSearch() {
         setTotal(0);
       })
       .finally(() => setIsLoading(false));
-  }, [filters, getCompatibleGroups]);
+  }, [filters, page, getCompatibleGroups]);
 
   const updateFilters = useCallback((updates: Partial<DonorSearchFilters>) => {
     setFilters(prev => ({ ...prev, ...updates }));
+    setPage(1);
   }, []);
 
   const toggleBloodGroup = useCallback((group: BloodGroup) => {
@@ -102,6 +106,7 @@ export function useSearch() {
         ? prev.bloodGroups.filter(g => g !== group)
         : [...prev.bloodGroups, group],
     }));
+    setPage(1);
   }, []);
 
   const toggleDepartment = useCallback((dept: Department) => {
@@ -111,6 +116,7 @@ export function useSearch() {
         ? prev.departments.filter(d => d !== dept)
         : [...prev.departments, dept],
     }));
+    setPage(1);
   }, []);
 
   const clearFilters = useCallback(() => {
@@ -125,6 +131,7 @@ export function useSearch() {
       searchQuery: '',
       sortBy: 'eligible',
     });
+    setPage(1);
   }, []);
 
   const hasActiveFilters =
@@ -153,6 +160,9 @@ export function useSearch() {
     isLoading,
     filters,
     stats,
+    page,
+    setPage,
+    totalPages: Math.ceil(total / 60) || 1,
     updateFilters,
     toggleBloodGroup,
     toggleDepartment,

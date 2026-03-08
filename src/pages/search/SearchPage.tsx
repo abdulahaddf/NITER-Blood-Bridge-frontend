@@ -7,7 +7,9 @@ import {
   X,
   SlidersHorizontal,
   HeartPulse,
-  CloudCog
+  CloudCog,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -284,7 +286,11 @@ export function SearchPage() {
     toggleBloodGroup, 
     toggleDepartment, 
     clearFilters,
-    hasActiveFilters 
+    hasActiveFilters,
+    stats,
+    page,
+    setPage,
+    totalPages
   } = useSearch();
 
   return (
@@ -295,7 +301,7 @@ export function SearchPage() {
           <div>
             <h1 className="text-2xl font-bold mb-1">Find Blood Donors</h1>
             <p className="text-muted-foreground">
-              {profiles.length} eligible donors available
+              {stats.total} eligible donors available
             </p>
           </div>
           <Button 
@@ -424,10 +430,36 @@ export function SearchPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                {profiles.map((donor) => (
-                  <DonorCard key={donor.id} donor={donor} />
-                ))}
+              <div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+                  {profiles.map((donor) => (
+                    <DonorCard key={donor.id} donor={donor} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-4 mt-8">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setPage(page - 1)}
+                      disabled={page === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-2" />
+                      Previous
+                    </Button>
+                    <span className="text-sm font-medium">
+                      Page {page} of {totalPages}
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setPage(page + 1)}
+                      disabled={page === totalPages}
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

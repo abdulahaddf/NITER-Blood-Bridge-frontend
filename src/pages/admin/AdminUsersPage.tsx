@@ -58,8 +58,9 @@ export function AdminUsersPage() {
     try {
       const params: Record<string, string | number | boolean | undefined> = { limit: 100, page: 1 };
       if (search) params.search = search;
-      const response = await api.get<{ data: UserWithProfile[] } | UserWithProfile[]>('/api/users', params);
-      setUsers(Array.isArray(response) ? response : (response as { data: UserWithProfile[] }).data ?? []);
+      // The backend returns { data, meta } for paginated results
+      const response = await api.get<{ data: UserWithProfile[], meta?: any }>('/api/users', params);
+      setUsers(Array.isArray(response) ? response : response.data ?? []);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to load users');
     } finally {
