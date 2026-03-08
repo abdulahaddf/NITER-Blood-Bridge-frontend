@@ -28,6 +28,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { BloodGroupLabels, type BloodGroup, type BloodRequestFormData } from '@/types';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { api } from '@/lib/api';
 
 const bloodGroups: BloodGroup[] = ['A_POS', 'A_NEG', 'B_POS', 'B_NEG', 'AB_POS', 'AB_NEG', 'O_POS', 'O_NEG'];
 
@@ -77,16 +78,25 @@ export function BloodRequestPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      await api.post('/api/requests', {
+        ...formData,
+        contactPhone: formData.contactPhone.startsWith('+880') 
+          ? formData.contactPhone 
+          : `+880${formData.contactPhone}`
+      });
 
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    
-    if (formData.urgency === 'critical') {
-      toast.success('Critical request submitted! Admins have been notified.');
-    } else {
-      toast.success('Blood request submitted successfully!');
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+      
+      if (formData.urgency === 'critical') {
+        toast.success('Critical request submitted! Admins have been notified.');
+      } else {
+        toast.success('Blood request submitted successfully!');
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to submit request');
+      setIsSubmitting(false);
     }
   };
 

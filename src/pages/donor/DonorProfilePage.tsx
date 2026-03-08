@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, 
@@ -11,7 +11,8 @@ import {
   Calendar,
   Check,
   Eye,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +25,7 @@ import {
 } from '@/components/ui/dialog';
 import { useAllProfiles } from '@/hooks/useProfile';
 import { BloodGroupLabels, DepartmentLabels, calculateEligibility, getBatchLabel } from '@/types';
+import type { DonorProfile } from '@/types';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -42,11 +44,31 @@ export function DonorProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getProfileById } = useAllProfiles();
+  const [profile, setProfile] = useState<DonorProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactRevealed, setContactRevealed] = useState(false);
 
-  const profile = id ? getProfileById(id) : undefined;
-console.log(profile);
+  useEffect(() => {
+    if (!id) return;
+    setIsLoading(true);
+    getProfileById(id).then(data => {
+      setProfile(data || null);
+      setIsLoading(false);
+    }).catch(() => {
+      setProfile(null);
+      setIsLoading(false);
+    });
+  }, [id, getProfileById]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -176,7 +198,7 @@ console.log(profile);
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center gap-3">
                     <Building2 className="h-4 w-4 text-muted-foreground" />
-                    <span>{DepartmentLabels[profile.department]}</span>
+                    <span>{DepartmentLabels[profile.department as keyof typeof DepartmentLabels]}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <GraduationCap className="h-4 w-4 text-muted-foreground" />

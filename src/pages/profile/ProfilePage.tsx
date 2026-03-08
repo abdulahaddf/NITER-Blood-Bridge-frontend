@@ -96,9 +96,9 @@ export function ProfilePage() {
 
   const eligibility = calculateEligibility(profile);
 
-  const handleAddDonation = () => {
+  const handleAddDonation = async () => {
     try {
-      addDonation({
+      await addDonation({
         donationDate: donationData.donationDate,
         location: donationData.location,
         notes: donationData.notes,
@@ -106,8 +106,8 @@ export function ProfilePage() {
       toast.success('Donation logged successfully!');
       setShowDonationModal(false);
       setDonationData({ donationDate: new Date(), location: '', notes: '' });
-    } catch {
-      toast.error('Failed to log donation');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to log donation');
     }
   };
 
@@ -122,11 +122,8 @@ export function ProfilePage() {
     }
   };
 
-  // Mock contact reveals for demo
-  const contactReveals = [
-    { id: '1', name: 'John Doe', date: '2024-07-18', purpose: 'Emergency blood need' },
-    { id: '2', name: 'Sarah Rahman', date: '2024-07-10', purpose: 'Hospital request' },
-  ];
+  // No contact reveals API yet
+  const contactReveals: any[] = [];
 
   return (
     <div className="min-h-screen bg-background py-8">

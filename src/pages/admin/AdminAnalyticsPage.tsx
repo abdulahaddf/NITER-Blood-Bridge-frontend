@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { 
   BarChart3, 
   PieChart, 
@@ -6,8 +7,27 @@ import {
   Droplets
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { bloodGroupStats, dashboardStats } from '@/data/mockData';
 import { BloodGroupLabels } from '@/types';
+import { api } from '@/lib/api';
+import type { BloodGroup } from '@/types';
+
+interface DashboardStats {
+  totalUsers: number;
+  verifiedProfiles: number;
+  eligibleDonors: number;
+  pendingDeletions: number;
+}
+
+interface BloodGroupStat {
+  bloodGroup: BloodGroup;
+  count: number;
+  eligibleCount: number;
+}
+
+interface DonorStats {
+  bloodGroupStats?: BloodGroupStat[];
+  byBloodGroup?: Record<BloodGroup, { total: number; eligible: number }>;
+}
 
 const bloodGroupColors: Record<string, string> = {
   A_POS: '#3B82F6',
@@ -20,8 +40,38 @@ const bloodGroupColors: Record<string, string> = {
   O_NEG: '#16A34A',
 };
 
+const BLOOD_GROUPS: BloodGroup[] = ['A_POS','A_NEG','B_POS','B_NEG','AB_POS','AB_NEG','O_POS','O_NEG'];
+
 export function AdminAnalyticsPage() {
-  // Calculate percentages for pie chart
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [bloodGroupStats, setBloodGroupStats] = useState<BloodGroupStat[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.allSettled([
+      api.get<DashboardStats>('/api/admin/dashboard'),
+      api.get<DonorStats>('/api/donors/stats'),
+    ]).then(([dashboardRes, donorStatsRes]) => {
+      if (dashboardRes.status === 'fulfilled') {
+        setStats(dashboardRes.value);
+      }
+      if (donorStatsRes.status === 'fulfilled') {
+        const ds = donorStatsRes.value;
+        if (ds.bloodGroupStats) {
+          setBloodGroupStats(ds.bloodGroupStats);
+        } else if (ds.byBloodGroup) {
+          const converted = BLOOD_GROUPS.map(bg => ({
+            bloodGroup: bg,
+            count: ds.byBloodGroup![bg]?.total ?? 0,
+            eligibleCount: ds.byBloodGroup![bg]?.eligible ?? 0,
+          }));
+          setBloodGroupStats(converted);
+        }
+      }
+      setIsLoading(false);
+    });
+  }, []);
+
   const totalDonors = bloodGroupStats.reduce((acc, stat) => acc + stat.count, 0);
 
   return (
@@ -41,7 +91,7 @@ export function AdminAnalyticsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Donors</p>
-                <p className="text-3xl font-bold">{dashboardStats.totalUsers}</p>
+                <p className="text-3xl font-bold">{isLoading ? '—' : stats?.totalUsers}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center">
                 <Users className="h-6 w-6 text-white" />
@@ -54,7 +104,7 @@ export function AdminAnalyticsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Eligible Now</p>
-                <p className="text-3xl font-bold">{dashboardStats.eligibleDonors}</p>
+                <p className="text-3xl font-bold">{isLoading ? '—' : stats?.eligibleDonors}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-green-500 flex items-center justify-center">
                 <TrendingUp className="h-6 w-6 text-white" />
@@ -67,7 +117,7 @@ export function AdminAnalyticsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Verified</p>
-                <p className="text-3xl font-bold">{dashboardStats.verifiedProfiles}</p>
+                <p className="text-3xl font-bold">{isLoading ? '—' : stats?.verifiedProfiles}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-purple-500 flex items-center justify-center">
                 <BarChart3 className="h-6 w-6 text-white" />
@@ -101,39 +151,45 @@ export function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {bloodGroupStats.map((stat) => {
-                const percentage = ((stat.count / totalDonors) * 100).toFixed(1);
-                return (
-                  <div key={stat.bloodGroup} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: bloodGroupColors[stat.bloodGroup] }}
+              {isLoading ? (
+                [...Array(6)].map((_, i) => (
+                  <div key={i} className="h-10 bg-muted rounded animate-pulse" />
+                ))
+              ) : (
+                bloodGroupStats.map((stat) => {
+                  const percentage = totalDonors > 0 ? ((stat.count / totalDonors) * 100).toFixed(1) : "0.0";
+                  return (
+                    <div key={stat.bloodGroup} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span 
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: bloodGroupColors[stat.bloodGroup] }}
+                          />
+                          <span className="font-medium">{BloodGroupLabels[stat.bloodGroup]}</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm text-muted-foreground">
+                            {stat.eligibleCount} eligible
+                          </span>
+                          <span className="text-sm font-medium w-12 text-right">
+                            {percentage}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className="h-full rounded-full transition-all"
+                          style={{ 
+                            width: `${percentage}%`,
+                            backgroundColor: bloodGroupColors[stat.bloodGroup]
+                          }}
                         />
-                        <span className="font-medium">{BloodGroupLabels[stat.bloodGroup]}</span>
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-muted-foreground">
-                          {stat.eligibleCount} eligible
-                        </span>
-                        <span className="text-sm font-medium w-12 text-right">
-                          {percentage}%
-                        </span>
                       </div>
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full transition-all"
-                        style={{ 
-                          width: `${percentage}%`,
-                          backgroundColor: bloodGroupColors[stat.bloodGroup]
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>
@@ -148,50 +204,64 @@ export function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-green-50 rounded-lg p-4 text-center">
-                  <p className="text-3xl font-bold text-green-600">
-                    {dashboardStats.eligibleDonors}
-                  </p>
-                  <p className="text-sm text-green-700">Eligible to Donate</p>
-                </div>
-                <div className="bg-yellow-50 rounded-lg p-4 text-center">
-                  <p className="text-3xl font-bold text-yellow-600">
-                    {dashboardStats.totalUsers - dashboardStats.eligibleDonors}
-                  </p>
-                  <p className="text-sm text-yellow-700">Not Eligible Yet</p>
-                </div>
-              </div>
+              {isLoading ? (
+                <div className="h-40 bg-muted rounded animate-pulse" />
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-green-50 rounded-lg p-4 text-center">
+                      <p className="text-3xl font-bold text-green-600">
+                        {stats?.eligibleDonors}
+                      </p>
+                      <p className="text-sm text-green-700">Eligible to Donate</p>
+                    </div>
+                    <div className="bg-yellow-50 rounded-lg p-4 text-center">
+                      <p className="text-3xl font-bold text-yellow-600">
+                        {(stats?.totalUsers ?? 0) - (stats?.eligibleDonors ?? 0)}
+                      </p>
+                      <p className="text-sm text-yellow-700">Not Eligible Yet</p>
+                    </div>
+                  </div>
 
-              <div>
-                <h4 className="font-medium mb-3">Eligibility Rate</h4>
-                <div className="h-4 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-green-500 rounded-full"
-                    style={{ 
-                      width: `${(dashboardStats.eligibleDonors / dashboardStats.totalUsers) * 100}%` 
-                    }}
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {((dashboardStats.eligibleDonors / dashboardStats.totalUsers) * 100).toFixed(1)}% of donors are currently eligible
-                </p>
-              </div>
+                  <div>
+                    <h4 className="font-medium mb-3">Eligibility Rate</h4>
+                    <div className="h-4 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500 rounded-full"
+                        style={{ 
+                          width: stats?.totalUsers && stats.totalUsers > 0 
+                            ? `${(stats.eligibleDonors / stats.totalUsers) * 100}%` 
+                            : '0%'
+                        }}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {stats?.totalUsers && stats.totalUsers > 0 
+                        ? ((stats.eligibleDonors / stats.totalUsers) * 100).toFixed(1) 
+                        : '0.0'}% of donors are currently eligible
+                    </p>
+                  </div>
 
-              <div>
-                <h4 className="font-medium mb-3">Verification Rate</h4>
-                <div className="h-4 bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-blue-500 rounded-full"
-                    style={{ 
-                      width: `${(dashboardStats.verifiedProfiles / dashboardStats.totalUsers) * 100}%` 
-                    }}
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {((dashboardStats.verifiedProfiles / dashboardStats.totalUsers) * 100).toFixed(1)}% of users have verified profiles
-                </p>
-              </div>
+                  <div>
+                    <h4 className="font-medium mb-3">Verification Rate</h4>
+                    <div className="h-4 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-500 rounded-full"
+                        style={{ 
+                          width: stats?.totalUsers && stats.totalUsers > 0 
+                            ? `${(stats.verifiedProfiles / stats.totalUsers) * 100}%` 
+                            : '0%'
+                        }}
+                      />
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {stats?.totalUsers && stats.totalUsers > 0 
+                        ? ((stats.verifiedProfiles / stats.totalUsers) * 100).toFixed(1) 
+                        : '0.0'}% of users have verified profiles
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>

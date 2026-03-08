@@ -91,8 +91,8 @@ export function ProfileEditPage() {
   // Check seed match when department or idNumber changes
   useEffect(() => {
     if (formData.department && formData.idNumber.length >= 5) {
-      const timer = setTimeout(() => {
-        const matched = checkSeedMatch(formData.department, formData.idNumber);
+      const timer = setTimeout(async () => {
+        const matched = await checkSeedMatch(formData.department, formData.idNumber);
         setLocalSeedMatch(matched);
       }, 500);
       return () => clearTimeout(timer);
@@ -106,15 +106,15 @@ export function ProfileEditPage() {
     
     try {
       if (profile) {
-        updateProfile(formData);
+        await updateProfile(formData);
         toast.success('Profile updated successfully!');
       } else {
-        createProfile(formData);
+        await createProfile(formData);
         toast.success('Profile created successfully!');
       }
       navigate('/profile');
-    } catch (error) {
-      toast.error('Failed to save profile');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save profile');
     }
   };
 

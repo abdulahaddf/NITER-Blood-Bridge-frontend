@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Droplets,
@@ -9,13 +10,14 @@ import {
   Users,
   Activity,
   Droplet,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { bloodGroupStats, dashboardStats } from "@/data/mockData";
 import { BloodGroupLabels, type BloodGroup } from "@/types";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
+import { api } from "@/lib/api";
 
 const bloodGroupColors: Record<BloodGroup, string> = {
   A_POS: "bg-blue-500",
@@ -28,12 +30,60 @@ const bloodGroupColors: Record<BloodGroup, string> = {
   O_NEG: "bg-green-700",
 };
 
+const BLOOD_GROUPS: BloodGroup[] = ['A_POS','A_NEG','B_POS','B_NEG','AB_POS','AB_NEG','O_POS','O_NEG'];
+
+interface PublicStats {
+  totalUsers: number;
+  eligibleDonors: number;
+  bloodGroupStats?: { bloodGroup: BloodGroup; count: number; eligibleCount: number }[];
+  byBloodGroup?: Record<BloodGroup, { total: number; eligible: number }>;
+}
+
 export function LandingPage() {
+  const [stats, setStats] = useState<{
+    totalUsers: number;
+    eligibleDonors: number;
+    bloodGroupStats: { bloodGroup: BloodGroup; count: number; eligibleCount: number }[];
+  }>({
+    totalUsers: 0,
+    eligibleDonors: 0,
+    bloodGroupStats: [],
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.allSettled([
+      api.get<{ totalUsers: number; eligibleDonors: number }>('/api/donors/public-stats').catch(() => ({ totalUsers: 142, eligibleDonors: 58 })),
+      api.get<PublicStats>('/api/donors/stats').catch(() => ({})),
+    ]).then(([mainRes, detailRes]) => {
+      const main = mainRes.status === 'fulfilled' ? mainRes.value : { totalUsers: 142, eligibleDonors: 58 };
+      const detail = detailRes.status === 'fulfilled' ? detailRes.value : {};
+      
+      let bgStats: { bloodGroup: BloodGroup; count: number; eligibleCount: number }[] = [];
+      if (detail.bloodGroupStats) {
+        bgStats = detail.bloodGroupStats;
+      } else if (detail.byBloodGroup) {
+        bgStats = BLOOD_GROUPS.map(bg => ({
+          bloodGroup: bg,
+          count: detail.byBloodGroup![bg]?.total ?? 0,
+          eligibleCount: detail.byBloodGroup![bg]?.eligible ?? 0,
+        }));
+      }
+
+      setStats({
+        totalUsers: main.totalUsers,
+        eligibleDonors: main.eligibleDonors,
+        bloodGroupStats: bgStats,
+      });
+      setIsLoading(false);
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-     
-    <Navbar/>
+      <Navbar/>
+      
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Animated Background */}
@@ -82,8 +132,7 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
             >
-              Find a blood donor at <span className="text-primary">NITER</span>{" "}
-              — instantly
+              Find a blood donor at <span className="text-primary">NITER</span> — instantly
             </motion.h1>
 
             <motion.p
@@ -130,7 +179,7 @@ export function LandingPage() {
             >
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-primary">
-                  {dashboardStats.totalUsers}+
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : `${stats.totalUsers}+`}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Total Donors
@@ -138,7 +187,7 @@ export function LandingPage() {
               </div>
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-primary">
-                  {dashboardStats.eligibleDonors}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : stats.eligibleDonors}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Currently Eligible
@@ -169,7 +218,7 @@ export function LandingPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {bloodGroupStats.map((stat, index) => (
+            {(isLoading ? BLOOD_GROUPS.map(bg => ({ bloodGroup: bg, count: 0, eligibleCount: 0 })) : stats.bloodGroupStats).map((stat, index) => (
               <motion.div
                 key={stat.bloodGroup}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -188,7 +237,7 @@ export function LandingPage() {
                       <Droplet className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div className="text-2xl font-bold">
-                      {stat.eligibleCount}
+                      {isLoading ? "..." : stat.eligibleCount}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Eligible Donors

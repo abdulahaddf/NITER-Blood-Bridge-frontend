@@ -1,7 +1,9 @@
+import axios from 'axios';
+
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
-const AUTH_TOKEN_KEY = 'niter_access_token';
-const REFRESH_TOKEN_KEY = 'niter_refresh_token';
+export const AUTH_TOKEN_KEY = 'niter_access_token';
+export const REFRESH_TOKEN_KEY = 'niter_refresh_token';
 
 export function getAccessToken(): string | null {
   return localStorage.getItem(AUTH_TOKEN_KEY);
@@ -21,83 +23,49 @@ export function getRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
-interface RequestOptions extends RequestInit {
-  params?: Record<string, string | number | boolean | string[] | undefined | null>;
-}
+// Axios instance
+const axiosInstance = axios.create({
+  baseURL: BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+});
 
-function buildUrl(path: string, params?: RequestOptions['params']): string {
-  const url = new URL(`${BASE_URL}${path}`);
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value === undefined || value === null) return;
-      if (Array.isArray(value)) {
-        value.forEach(v => url.searchParams.append(key, String(v)));
-      } else {
-        url.searchParams.set(key, String(value));
-      }
-    });
-  }
-  return url.toString();
-}
-
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { params, headers: extraHeaders, ...rest } = options;
-  const url = buildUrl(path, params);
-
+// Attach Bearer token to every request
+axiosInstance.interceptors.request.use(config => {
   const token = getAccessToken();
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(extraHeaders as Record<string, string>),
-  };
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    config.headers['Authorization'] = `Bearer ${token}`;
   }
+  return config;
+});
 
-  const response = await fetch(url, { ...rest, headers });
-
-  if (!response.ok) {
-    let errMsg = `HTTP ${response.status}`;
-    try {
-      const errBody = await response.json();
-      errMsg = errBody.message ?? errBody.error ?? errMsg;
-    } catch {
-      // ignore parse error
-    }
-    throw new Error(errMsg);
+// Unwrap axios error message
+axiosInstance.interceptors.response.use(
+  response => response,
+  error => {
+    const message =
+      error.response?.data?.message ??
+      error.response?.data?.error ??
+      error.message ??
+      'Request failed';
+    return Promise.reject(new Error(Array.isArray(message) ? message.join(', ') : message));
   }
+);
 
-  // Handle empty responses (e.g. 201/204 with no body)
-  const contentType = response.headers.get('Content-Type') ?? '';
-  if (!contentType.includes('application/json')) {
-    return undefined as unknown as T;
-  }
-
-  return response.json() as Promise<T>;
-}
+type Params = Record<string, string | number | boolean | string[] | undefined | null>;
 
 export const api = {
-  get: <T>(path: string, params?: RequestOptions['params']) =>
-    request<T>(path, { method: 'GET', params }),
+  get: <T>(path: string, params?: Params) =>
+    axiosInstance.get<T>(path, { params }).then(r => r.data),
 
-  post: <T>(path: string, body?: unknown, params?: RequestOptions['params']) =>
-    request<T>(path, {
-      method: 'POST',
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-      params,
-    }),
+  post: <T>(path: string, body?: unknown, params?: Params) =>
+    axiosInstance.post<T>(path, body, { params }).then(r => r.data),
 
   put: <T>(path: string, body?: unknown) =>
-    request<T>(path, {
-      method: 'PUT',
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    }),
+    axiosInstance.put<T>(path, body).then(r => r.data),
 
   patch: <T>(path: string, body?: unknown) =>
-    request<T>(path, {
-      method: 'PATCH',
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    }),
+    axiosInstance.patch<T>(path, body).then(r => r.data),
 
   delete: <T>(path: string) =>
-    request<T>(path, { method: 'DELETE' }),
+    axiosInstance.delete<T>(path).then(r => r.data),
 };
