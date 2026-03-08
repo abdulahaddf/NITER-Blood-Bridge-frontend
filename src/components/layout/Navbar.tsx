@@ -55,10 +55,10 @@ export function Navbar() {
             className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity"
           >
             <Droplets className="h-7 w-7" />
-            <span className="font-bold text-lg hidden sm:inline">
+            <span className="font-bold text-lg sm:text-xl md:text-2xl  ">
               NITER Blood Bridge
             </span>
-            <span className="font-bold text-lg sm:hidden">NBC</span>
+            
           </Link>
 
           {/* Desktop Navigation */}
