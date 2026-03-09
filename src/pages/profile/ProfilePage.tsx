@@ -227,11 +227,11 @@ export function ProfilePage() {
 
                   {/* Details */}
                   <div className="space-y-3 text-sm">
-                    <div className="flex items-center justify-between">
+                    <div className="md:flex gap-5 items-center justify-between">
                       <p className="text-sm text-muted-foreground">Department</p>
                       <p className="font-medium">{profile.department ? DepartmentLabels[profile.department] : 'Not specified'}</p>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="md:flex gap-5 items-center justify-between">
                       <p className="text-sm text-muted-foreground">Batch</p>
                       <p className="font-medium">{profile.batch ? getBatchLabel(profile.batch) : 'Not specified'}</p>
                     </div>
