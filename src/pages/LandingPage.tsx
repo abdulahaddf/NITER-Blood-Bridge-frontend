@@ -329,7 +329,7 @@ export function LandingPage() {
             <p className="text-sm text-muted-foreground text-center">
               National Institute of Textile Engineering and Research <span className="font-bold">(NITER)</span> <br /> Nayathat, Dhaka, Bangladesh
             </p>
-          <p>Made for the Brotherhood by <a href="https://abdulahaddf.vercel.app/" target="_blank">AHAD</a>  </p>
+          <p>Made for the Brotherhood by <a href="https://abdulahaddf.vercel.app/" target="_blank"> <span className="font-bold text-primary underline">AHAD</span></a>  </p>
           </div>
         </div>
       </footer>
