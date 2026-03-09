@@ -1,24 +1,30 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { DonorProfile, DonorSearchFilters, BloodGroup, Department } from '@/types';
-import { BloodCompatibility } from '@/types';
 import { api } from '@/lib/api';
 
-interface DonorsApiResponse {
+const ITEMS_PER_PAGE = 39;
+
+interface PaginatedResponse {
   data: DonorProfile[];
-  total: number;
-  page: number;
-  limit: number;
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }
 
 export function useSearch() {
   const [profiles, setProfiles] = useState<DonorProfile[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
   const [filters, setFilters] = useState<DonorSearchFilters>({
     bloodGroups: [],
     compatibilityMode: false,
-    eligibilityOnly: true,
+    eligibilityOnly: false,
     departments: [],
     batchRange: [1, 16],
     onCampusOnly: false,
@@ -27,19 +33,9 @@ export function useSearch() {
     sortBy: 'eligible',
   });
 
-  // Get compatible blood groups
-  const getCompatibleGroups = useCallback((groups: BloodGroup[]): BloodGroup[] => {
-    if (groups.length === 0) return [];
-    const compatible = new Set<BloodGroup>();
-    groups.forEach(group => {
-      BloodCompatibility[group].forEach(g => compatible.add(g));
-    });
-    return Array.from(compatible);
-  }, []);
-
   const abortRef = useRef<AbortController | null>(null);
 
-  // Fetch donors from API whenever filters change
+  // Fetch donors from API whenever filters or page changes
   useEffect(() => {
     // Abort previous request
     if (abortRef.current) abortRef.current.abort();
@@ -47,52 +43,57 @@ export function useSearch() {
 
     setIsLoading(true);
 
-    const bloodGroupsToSend = filters.compatibilityMode && filters.bloodGroups.length > 0
-      ? getCompatibleGroups(filters.bloodGroups)
-      : filters.bloodGroups;
-
+    // Build params — let the backend handle compatibility expansion
     const params: Record<string, string | number | boolean | string[] | undefined | null> = {
       search: filters.searchQuery || undefined,
-      compatibilityMode: filters.compatibilityMode,
+      compatibilityMode: filters.compatibilityMode || undefined,
       eligibilityOnly: filters.eligibilityOnly,
-      onCampusOnly: filters.onCampusOnly,
+      onCampusOnly: filters.onCampusOnly || undefined,
       willingToDonate: filters.willingToDonate,
       sortBy: filters.sortBy,
       batchMin: filters.batchRange[0],
       batchMax: filters.batchRange[1],
-      page: 1,
-      limit: 100,
+      page: page,
+      limit: ITEMS_PER_PAGE,
     };
 
-    if (bloodGroupsToSend.length > 0) {
-      params.bloodGroups = bloodGroupsToSend;
+    if (filters.bloodGroups.length > 0) {
+      params.bloodGroups = filters.bloodGroups;
     }
     if (filters.departments.length > 0) {
       params.departments = filters.departments;
     }
 
-    api.get<DonorsApiResponse | DonorProfile[]>('/api/donors', params)
+    api.get<PaginatedResponse>('/api/donors', params)
       .then(response => {
-        // Handle both paginated and array responses
-        if (Array.isArray(response)) {
-          setProfiles(response);
-          setTotal(response.length);
+        if (response && response.data) {
+          setProfiles(response.data);
+          setTotal(response.meta?.total ?? response.data.length);
+          setTotalPages(response.meta?.totalPages ?? 1);
+        } else if (Array.isArray(response)) {
+          // Fallback for unexpected response shape
+          setProfiles(response as unknown as DonorProfile[]);
+          setTotal((response as unknown as DonorProfile[]).length);
+          setTotalPages(1);
         } else {
-          setProfiles(response.data ?? []);
-          setTotal(response.total ?? 0);
+          setProfiles([]);
+          setTotal(0);
+          setTotalPages(1);
         }
       })
       .catch(err => {
-        // Ignore aborted requests
         if (err instanceof Error && err.name === 'AbortError') return;
+        console.error('Search error:', err);
         setProfiles([]);
         setTotal(0);
+        setTotalPages(1);
       })
       .finally(() => setIsLoading(false));
-  }, [filters, getCompatibleGroups]);
+  }, [filters, page]);
 
   const updateFilters = useCallback((updates: Partial<DonorSearchFilters>) => {
     setFilters(prev => ({ ...prev, ...updates }));
+    setPage(1);
   }, []);
 
   const toggleBloodGroup = useCallback((group: BloodGroup) => {
@@ -102,6 +103,7 @@ export function useSearch() {
         ? prev.bloodGroups.filter(g => g !== group)
         : [...prev.bloodGroups, group],
     }));
+    setPage(1);
   }, []);
 
   const toggleDepartment = useCallback((dept: Department) => {
@@ -111,13 +113,14 @@ export function useSearch() {
         ? prev.departments.filter(d => d !== dept)
         : [...prev.departments, dept],
     }));
+    setPage(1);
   }, []);
 
   const clearFilters = useCallback(() => {
     setFilters({
       bloodGroups: [],
       compatibilityMode: false,
-      eligibilityOnly: true,
+      eligibilityOnly: false,
       departments: [],
       batchRange: [1, 16],
       onCampusOnly: false,
@@ -125,12 +128,13 @@ export function useSearch() {
       searchQuery: '',
       sortBy: 'eligible',
     });
+    setPage(1);
   }, []);
 
   const hasActiveFilters =
     filters.bloodGroups.length > 0 ||
     filters.compatibilityMode ||
-    !filters.eligibilityOnly ||
+    filters.eligibilityOnly ||
     filters.departments.length > 0 ||
     filters.batchRange[0] !== 1 ||
     filters.batchRange[1] !== 16 ||
@@ -153,6 +157,9 @@ export function useSearch() {
     isLoading,
     filters,
     stats,
+    page,
+    setPage,
+    totalPages,
     updateFilters,
     toggleBloodGroup,
     toggleDepartment,

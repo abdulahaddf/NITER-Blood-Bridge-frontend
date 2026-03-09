@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Send, Users, Droplets, Shield, Eye, History } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Send, Users, Droplets, Shield, Eye, History, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { bloodGroupStats } from "@/data/mockData";
 import { BloodGroupLabels, type BloodGroup } from "@/types";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
 
 const bloodGroups: BloodGroup[] = [
@@ -36,25 +36,53 @@ export function AdminBroadcastPage() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [isPreview, setIsPreview] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [counts, setCounts] = useState({
+    all: 0,
+    admins: 3,
+    byBloodGroup: {} as Record<BloodGroup, number>
+  });
+
+  useEffect(() => {
+    Promise.allSettled([
+      api.get<{ totalUsers: number }>('/api/admin/dashboard').catch(() => ({ totalUsers: 0 })),
+      api.get<any>('/api/donors/stats').catch(() => ({})),
+    ]).then(([dashRes, statsRes]) => {
+      const dash = dashRes.status === 'fulfilled' ? (dashRes.value as any) : { totalUsers: 0 };
+      const stats = statsRes.status === 'fulfilled' ? (statsRes.value as any) : {};
+      
+      const bgCounts: Record<string, number> = {};
+      if (stats.bloodGroupStats) {
+        stats.bloodGroupStats.forEach((stat: any) => {
+          bgCounts[stat.bloodGroup] = stat.count;
+        });
+      }
+
+      setCounts({
+        all: dash.totalUsers,
+        admins: 3,
+        byBloodGroup: bgCounts as Record<BloodGroup, number>
+      });
+      setIsLoading(false);
+    });
+  }, []);
 
   const getRecipientCount = () => {
     switch (target) {
       case "all":
-        return 73;
+        return counts.all;
       case "blood-group":
-        return (
-          bloodGroupStats.find((s) => s.bloodGroup === selectedBloodGroup)
-            ?.count || 0
-        );
+        return counts.byBloodGroup[selectedBloodGroup] || 0;
       case "admins":
-        return 3;
+        return counts.admins;
       default:
         return 0;
     }
   };
 
-  const handleSend = () => {
-    toast.success(`Broadcast sent to ${getRecipientCount()} recipients!`);
+  const handleSend = async () => {
+    // There is no broadcast API endpoint yet in the provided docs
+    toast.info("Broadcast API endpoint not available. Simulation successful.");
     setTitle("");
     setMessage("");
     setIsPreview(false);
@@ -73,13 +101,6 @@ export function AdminBroadcastPage() {
       title: "System Maintenance Notice",
       recipients: 73,
       date: "2024-07-10",
-      type: "all",
-    },
-    {
-      id: "3",
-      title: "New Features Available",
-      recipients: 73,
-      date: "2024-07-05",
       type: "all",
     },
   ];
@@ -119,7 +140,7 @@ export function AdminBroadcastPage() {
                     />
                     <Label
                       htmlFor="all"
-                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer text-center"
                     >
                       <Users className="mb-3 h-6 w-6" />
                       All Users
@@ -133,7 +154,7 @@ export function AdminBroadcastPage() {
                     />
                     <Label
                       htmlFor="blood-group"
-                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer text-center"
                     >
                       <Droplets className="mb-3 h-6 w-6" />
                       Blood Group
@@ -147,7 +168,7 @@ export function AdminBroadcastPage() {
                     />
                     <Label
                       htmlFor="admins"
-                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer text-center"
                     >
                       <Shield className="mb-3 h-6 w-6" />
                       Admins
@@ -207,7 +228,7 @@ export function AdminBroadcastPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">
-                    {getRecipientCount()} recipients
+                    {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : getRecipientCount()} recipients
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2">

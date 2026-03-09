@@ -9,8 +9,6 @@ import {
   Trash2, 
   Check, 
   Calendar,
-  Building2,
-  GraduationCap,
   Phone,
   Mail,
   Eye,
@@ -94,11 +92,30 @@ export function ProfilePage() {
     );
   }
 
+  // Auto-created profile (e.g. from Google login) - redirect to edit
+  if (!profile.profileComplete) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <Droplets className="h-12 w-12 text-primary mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Complete Your Profile</h2>
+          <p className="text-muted-foreground mb-6">
+            Your account has been created! Please fill in your details to start connecting with blood donors.
+          </p>
+          <Button onClick={() => navigate('/profile/edit')} className="btn-primary">
+            <Edit2 className="h-4 w-4 mr-2" />
+            Complete Profile
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const eligibility = calculateEligibility(profile);
 
-  const handleAddDonation = () => {
+  const handleAddDonation = async () => {
     try {
-      addDonation({
+      await addDonation({
         donationDate: donationData.donationDate,
         location: donationData.location,
         notes: donationData.notes,
@@ -106,8 +123,8 @@ export function ProfilePage() {
       toast.success('Donation logged successfully!');
       setShowDonationModal(false);
       setDonationData({ donationDate: new Date(), location: '', notes: '' });
-    } catch {
-      toast.error('Failed to log donation');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to log donation');
     }
   };
 
@@ -122,11 +139,8 @@ export function ProfilePage() {
     }
   };
 
-  // Mock contact reveals for demo
-  const contactReveals = [
-    { id: '1', name: 'John Doe', date: '2024-07-18', purpose: 'Emergency blood need' },
-    { id: '2', name: 'Sarah Rahman', date: '2024-07-10', purpose: 'Hospital request' },
-  ];
+  // No contact reveals API yet
+  const contactReveals: any[] = [];
 
   return (
     <div className="min-h-screen bg-background py-8">
@@ -152,7 +166,7 @@ export function ProfilePage() {
                         />
                       ) : (
                         <div className={`w-full h-full ${bloodGroupColors[profile.bloodGroup]} flex items-center justify-center text-white text-2xl font-bold`}>
-                          {profile.fullName.charAt(0).toUpperCase()}
+                          {profile?.fullName?.charAt(0)?.toUpperCase()}
                         </div>
                       )}
                     </div>
@@ -213,13 +227,13 @@ export function ProfilePage() {
 
                   {/* Details */}
                   <div className="space-y-3 text-sm">
-                    <div className="flex items-center gap-3">
-                      <Building2 className="h-4 w-4 text-muted-foreground" />
-                      <span>{DepartmentLabels[profile.department]}</span>
+                    <div className="md:flex gap-5 items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Department</p>
+                      <p className="font-medium">{profile.department ? DepartmentLabels[profile.department] : 'Not specified'}</p>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                      <span>{getBatchLabel(profile.batch)}</span>
+                    <div className="md:flex gap-5 items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Batch</p>
+                      <p className="font-medium">{profile.batch ? getBatchLabel(profile.batch) : 'Not specified'}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -315,7 +329,7 @@ export function ProfilePage() {
                 </Button>
               </div>
 
-              {profile.donationHistory.length === 0 ? (
+              {profile?.donationHistory?.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                     <Droplets className="h-8 w-8 text-muted-foreground" />
@@ -331,7 +345,7 @@ export function ProfilePage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {profile.donationHistory.map((donation) => (
+                  {profile?.donationHistory?.map((donation) => (
                     <div 
                       key={donation.id} 
                       className="flex items-start gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors"

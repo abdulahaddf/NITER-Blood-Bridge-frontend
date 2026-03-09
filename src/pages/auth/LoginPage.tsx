@@ -34,7 +34,9 @@ export function LoginPage() {
 
       if (result.success) {
         toast.success("Welcome back!");
-        navigate("/search");
+        const from = localStorage.getItem('auth_redirect_from') || "/search";
+        localStorage.removeItem('auth_redirect_from');
+        navigate(from, { replace: true });
       } else {
         setError(result.error || "Login failed");
       }
@@ -46,8 +48,7 @@ export function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    // For demo purposes, we'll simulate Google login with the first mock user
-    toast.info("Google OAuth would open here in production");
+    window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`;
   };
 
   return (
@@ -199,20 +200,6 @@ export function LoginPage() {
           </Link>
         </p>
 
-        {/* Demo Credentials */}
-        <div className="mt-8 p-4 bg-muted rounded-lg">
-          <p className="text-xs font-medium text-muted-foreground mb-2">
-            Demo Credentials:
-          </p>
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>
-              <strong>Admin:</strong> admin@niter.edu.bd / any password
-            </p>
-            <p>
-              <strong>User:</strong> john.doe@gmail.com / any password
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -25,8 +25,7 @@ export function AuthLayout() {
       {/* Footer */}
       <footer className="w-full p-6 text-center text-sm text-muted-foreground">
         <p>
-          National Institute of Technical Teachers' Education and Research,
-          Bangladesh
+          National Institute of Textile Engineering & Research (NITER)
         </p>
       </footer>
     </div>

@@ -19,8 +19,12 @@ export function useProfile(_userId: string | undefined) {
           setSeedMatched(data.seedMatched ?? false);
         }
       })
-      .catch(() => {
-        if (!cancelled) setProfile(null);
+      .catch((err) => {
+        // 404 means no profile yet — this is normal for new users
+        if (!cancelled) {
+          setProfile(null);
+          console.log('Profile not found (user may need to create one):', err?.message);
+        }
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -61,15 +65,11 @@ export function useProfile(_userId: string | undefined) {
     return newProfile;
   }, []);
 
-  const updateProfile = useCallback(async (data: Partial<ProfileFormData>): Promise<DonorProfile | null> => {
-    try {
-      const updated = await api.put<DonorProfile>('/api/profiles/me', data);
-      setProfile(updated);
-      if (updated.seedMatched) setSeedMatched(true);
-      return updated;
-    } catch {
-      return null;
-    }
+  const updateProfile = useCallback(async (data: Partial<ProfileFormData>): Promise<DonorProfile> => {
+    const updated = await api.put<DonorProfile>('/api/profiles/me', data);
+    setProfile(updated);
+    if (updated.seedMatched) setSeedMatched(true);
+    return updated;
   }, []);
 
   const addDonation = useCallback(async (data: DonationFormData): Promise<DonationLog> => {

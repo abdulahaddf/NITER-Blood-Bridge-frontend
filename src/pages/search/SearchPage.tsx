@@ -7,7 +7,8 @@ import {
   X,
   SlidersHorizontal,
   HeartPulse,
-  CloudCog
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +31,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useSearch } from '@/hooks/useSearch';
-import { BloodGroupLabels, DepartmentLabels, calculateEligibility, type BloodGroup, type Department } from '@/types';
+import { BloodGroupLabels, DepartmentLabels, getBatchLabel, calculateEligibility, type BloodGroup, type Department } from '@/types';
 import { cn } from '@/lib/utils';
 
 const bloodGroups: BloodGroup[] = ['A_POS', 'A_NEG', 'B_POS', 'B_NEG', 'AB_POS', 'AB_NEG', 'O_POS', 'O_NEG'];
@@ -68,7 +69,7 @@ function DonorCard({ donor }: { donor: ReturnType<typeof useSearch>['profiles'][
                 {donor.fullName}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {DepartmentLabels[donor.department]} · {donor.batch}th Batch
+                {donor.department ? DepartmentLabels[donor.department] : 'Not Specified'} · {donor.batch ? getBatchLabel(donor.batch) : 'Not Specified'}
               </p>
             </div>
           </div>
@@ -284,7 +285,11 @@ export function SearchPage() {
     toggleBloodGroup, 
     toggleDepartment, 
     clearFilters,
-    hasActiveFilters 
+    hasActiveFilters,
+    stats,
+    page,
+    setPage,
+    totalPages
   } = useSearch();
 
   return (
@@ -295,7 +300,7 @@ export function SearchPage() {
           <div>
             <h1 className="text-2xl font-bold mb-1">Find Blood Donors</h1>
             <p className="text-muted-foreground">
-              {profiles.length} eligible donors available
+              {stats.total} donors found {filters.eligibilityOnly && '(eligible only)'}
             </p>
           </div>
           <Button 
@@ -329,10 +334,9 @@ export function SearchPage() {
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="recent">Recently Active</SelectItem>
               <SelectItem value="eligible">Eligible First</SelectItem>
               <SelectItem value="donations">Most Donations</SelectItem>
-              <SelectItem value="recent">Recently Active</SelectItem>
-              <SelectItem value="batch">Same Batch</SelectItem>
             </SelectContent>
           </Select>
 
@@ -424,10 +428,36 @@ export function SearchPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-                {profiles.map((donor) => (
-                  <DonorCard key={donor.id} donor={donor} />
-                ))}
+              <div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
+                  {profiles.map((donor) => (
+                    <DonorCard key={donor.id} donor={donor} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-4 mt-8">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setPage(page - 1)}
+                      disabled={page === 1}
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-2" />
+                      Previous
+                    </Button>
+                    <span className="text-sm font-medium">
+                      Page {page} of {totalPages}
+                    </span>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setPage(page + 1)}
+                      disabled={page === totalPages}
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

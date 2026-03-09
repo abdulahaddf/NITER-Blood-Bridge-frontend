@@ -25,20 +25,37 @@ export function useAuth() {
 
   // Bootstrap auth state from localStorage on mount
   useEffect(() => {
-    const token = getAccessToken();
-    const storedUser = localStorage.getItem(AUTH_USER_KEY);
-    if (token && storedUser) {
-      try {
-        const user = JSON.parse(storedUser) as User;
-        setState({ user, isAuthenticated: true, isLoading: false });
-      } catch {
-        clearTokens();
-        localStorage.removeItem(AUTH_USER_KEY);
+    const initAuth = async () => {
+      const token = getAccessToken();
+      const storedUser = localStorage.getItem(AUTH_USER_KEY);
+      
+      if (token) {
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser) as User;
+            setState({ user, isAuthenticated: true, isLoading: false });
+            return;
+          } catch {
+            // ignore parse error and fetch fresh
+          }
+        }
+        
+        // Fetch fresh user data if token exists but no user in storage (or parse failed)
+        try {
+          const user = await api.get<User>('/api/auth/me');
+          localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+          setState({ user, isAuthenticated: true, isLoading: false });
+        } catch {
+          clearTokens();
+          localStorage.removeItem(AUTH_USER_KEY);
+          setState({ user: null, isAuthenticated: false, isLoading: false });
+        }
+      } else {
         setState({ user: null, isAuthenticated: false, isLoading: false });
       }
-    } else {
-      setState({ user: null, isAuthenticated: false, isLoading: false });
-    }
+    };
+
+    initAuth();
   }, []);
 
   const login = useCallback(
@@ -123,6 +140,23 @@ export function useAuth() {
     []
   );
 
+  const loadUser = useCallback(async () => {
+    try {
+      const user = await api.get<User>('/api/auth/me');
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+      setState(prev => ({ ...prev, user, isAuthenticated: true, isLoading: false }));
+      return user;
+    } catch (err) {
+      logout();
+      throw err;
+    }
+  }, [logout]);
+
+  const setSession = useCallback(async (accessToken: string, refreshToken: string) => {
+    setTokens(accessToken, refreshToken);
+    return loadUser();
+  }, [loadUser]);
+
   return {
     ...state,
     login,
@@ -131,6 +165,8 @@ export function useAuth() {
     updateUser,
     hasRole,
     resetPassword,
+    loadUser,
+    setSession,
   };
 }
 

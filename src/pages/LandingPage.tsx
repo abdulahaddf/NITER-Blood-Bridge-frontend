@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import {
   Droplets,
   Search,
@@ -9,13 +8,15 @@ import {
   Users,
   Activity,
   Droplet,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { bloodGroupStats, dashboardStats } from "@/data/mockData";
 import { BloodGroupLabels, type BloodGroup } from "@/types";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
+import { usePublicStats } from "@/hooks/usePublicStats";
+import { Link } from "react-router-dom";
 
 const bloodGroupColors: Record<BloodGroup, string> = {
   A_POS: "bg-blue-500",
@@ -28,18 +29,26 @@ const bloodGroupColors: Record<BloodGroup, string> = {
   O_NEG: "bg-green-700",
 };
 
+const BLOOD_GROUPS: BloodGroup[] = ['A_POS','A_NEG','B_POS','B_NEG','AB_POS','AB_NEG','O_POS','O_NEG'];
+
 export function LandingPage() {
+  const { stats, isLoading } = usePublicStats();
+
+  // Map hook stats to component local names for compatibility
+  const totalUsers = stats.totalDonors;
+  const eligibleDonors = stats.eligibleDonors;
+  const bloodGroupStats = stats.byBloodGroup;
   return (
     <div className="min-h-screen bg-background">
       {/* Navigation */}
-     
-    <Navbar/>
+      <Navbar/>
+      
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 blood-gradient-subtle">
           <div className="absolute inset-0 opacity-30">
-            {[...Array(20)].map((_, i) => (
+            {[...Array(20)]?.map((_, i) => (
               <motion.div
                 key={i}
                 className="absolute rounded-full bg-primary/20"
@@ -82,8 +91,7 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
             >
-              Find a blood donor at <span className="text-primary">NITER</span>{" "}
-              — instantly
+              Find a blood donor at <span className="text-primary">NITER</span> — instantly
             </motion.h1>
 
             <motion.p
@@ -130,7 +138,7 @@ export function LandingPage() {
             >
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-primary">
-                  {dashboardStats.totalUsers}+
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : `${totalUsers}+`}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Total Donors
@@ -138,7 +146,7 @@ export function LandingPage() {
               </div>
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-primary">
-                  {dashboardStats.eligibleDonors}
+                  {isLoading ? <Loader2 className="h-6 w-6 animate-spin mx-auto" /> : eligibleDonors}
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
                   Currently Eligible
@@ -169,7 +177,7 @@ export function LandingPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {bloodGroupStats.map((stat, index) => (
+            {(isLoading ? BLOOD_GROUPS?.map(bg => ({ bloodGroup: bg, count: 0, eligibleCount: 0 })) : bloodGroupStats)?.map((stat: { bloodGroup: BloodGroup; count: number; eligibleCount: number }, index: number) => (
               <motion.div
                 key={stat.bloodGroup}
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -188,7 +196,7 @@ export function LandingPage() {
                       <Droplet className="h-5 w-5 text-muted-foreground" />
                     </div>
                     <div className="text-2xl font-bold">
-                      {stat.eligibleCount}
+                      {isLoading ? "..." : stat.eligibleCount}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Eligible Donors
@@ -234,7 +242,7 @@ export function LandingPage() {
                   "Once verified, you will appear in search results when someone needs your blood type.",
                 step: "03",
               },
-            ].map((item, index) => (
+            ]?.map((item, index) => (
               <motion.div
                 key={item.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -269,9 +277,8 @@ export function LandingPage() {
               About NITER Blood Bridge
             </h2>
             <p className="text-muted-foreground mb-8 leading-relaxed">
-              NITER Blood Bridge is a platform built for the National Institute
-              of Technical Teachers&apos; Education and Research community. Our
-              mission is to create a reliable network of blood donors within our
+              NITER Blood Bridge is a platform built for the <span className="font-bold">NITERIANs</span>. Our
+              mission is to create a reliable network of blood donors within our  
               campus, making it easier to find help during medical emergencies.
             </p>
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
@@ -320,23 +327,9 @@ export function LandingPage() {
               <span className="font-bold">NITER Blood Bridge</span>
             </div>
             <p className="text-sm text-muted-foreground text-center">
-              National Institute of Technical Teachers&apos; Education and
-              Research, Bangladesh
+              National Institute of Textile Engineering and Research <span className="font-bold">(NITER)</span> <br /> Nayathat, Dhaka, Bangladesh
             </p>
-            <div className="flex items-center gap-4">
-              <Link
-                to="/login"
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                Login
-              </Link>
-              <Link
-                to="/register"
-                className="text-sm text-muted-foreground hover:text-foreground"
-              >
-                Register
-              </Link>
-            </div>
+          <p>Made for the Brotherhood by <a href="https://abdulahaddf.vercel.app/" target="_blank">AHAD</a>  </p>
           </div>
         </div>
       </footer>

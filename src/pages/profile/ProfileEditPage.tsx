@@ -4,10 +4,10 @@ import {
   User, 
   MapPin, 
   Droplets, 
-  Camera, 
+  // Camera, 
   Check, 
   ChevronLeft,
-  Upload,
+  // Upload,
   Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 const bloodGroups: BloodGroup[] = ['A_POS', 'A_NEG', 'B_POS', 'B_NEG', 'AB_POS', 'AB_NEG', 'O_POS', 'O_NEG'];
-const departments: Department[] = ['TE', 'IP', 'EE', 'CS', 'FD'];
+const departments: Department[] = ['IP', 'TE', 'EE', 'CS', 'FD'];
 const batches = Array.from({ length: 16 }, (_, i) => i + 1);
 
 export function ProfileEditPage() {
@@ -47,7 +47,7 @@ export function ProfileEditPage() {
   
   const [formData, setFormData] = useState<ProfileFormData>({
     fullName: '',
-    department: 'TE',
+    department: 'IP',
     idNumber: '',
     batch: 10,
     phone: '',
@@ -61,38 +61,40 @@ export function ProfileEditPage() {
     availabilityNote: '',
   });
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const [localSeedMatch, setLocalSeedMatch] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  // const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
       setFormData({
-        fullName: profile.fullName,
-        department: profile.department,
-        idNumber: profile.idNumber,
-        batch: profile.batch,
-        phone: profile.phone,
-        email: profile.email,
-        currentLocation: profile.currentLocation,
-        hometown: profile.hometown,
-        bloodGroup: profile.bloodGroup,
+        fullName: profile.fullName || '',
+        department: profile.department || 'TE',
+        idNumber: profile.idNumber || '',
+        batch: profile.batch || 10,
+        phone: profile.phone || '',
+        email: profile.email || auth.user?.email || '',
+        currentLocation: profile.currentLocation || '',
+        hometown: profile.hometown || '',
+        bloodGroup: profile.bloodGroup || 'O_POS',
         lastDonationDate: profile.lastDonationDate,
         neverDonated: !profile.lastDonationDate,
-        willingToDonate: profile.willingToDonate,
+        willingToDonate: profile.willingToDonate ?? true,
         availabilityNote: profile.availabilityNote || '',
       });
       setLocalSeedMatch(profile.seedMatched);
-      if (profile.profilePhoto) {
-        setPhotoPreview(profile.profilePhoto);
-      }
+      // if (profile.profilePhoto) {
+      //   setPhotoPreview(profile.profilePhoto);
+      // }
     }
-  }, [profile]);
+  }, [profile, auth.user?.email]);
 
   // Check seed match when department or idNumber changes
   useEffect(() => {
-    if (formData.department && formData.idNumber.length >= 5) {
-      const timer = setTimeout(() => {
-        const matched = checkSeedMatch(formData.department, formData.idNumber);
+    if (formData.department && formData?.idNumber?.length >= 5) {
+      const timer = setTimeout(async () => {
+        const matched = await checkSeedMatch(formData.department, formData.idNumber);
         setLocalSeedMatch(matched);
       }, 500);
       return () => clearTimeout(timer);
@@ -103,31 +105,35 @@ export function ProfileEditPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
     
     try {
       if (profile) {
-        updateProfile(formData);
+        // Profile exists (could be auto-created or complete) — always update
+        await updateProfile(formData);
         toast.success('Profile updated successfully!');
       } else {
-        createProfile(formData);
+        await createProfile(formData);
         toast.success('Profile created successfully!');
       }
       navigate('/profile');
-    } catch (error) {
-      toast.error('Failed to save profile');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to save profile');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setPhotoPreview(reader.result as string);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
 
   if (isLoading) {
     return (
@@ -230,7 +236,7 @@ export function ProfileEditPage() {
               <div className="space-y-2">
                 <Label>Batch</Label>
                 <Select
-                  value={formData.batch.toString()}
+                  value={formData.batch?.toString()}
                   onValueChange={(value) => setFormData({ ...formData, batch: parseInt(value) })}
                 >
                   <SelectTrigger>
@@ -251,13 +257,13 @@ export function ProfileEditPage() {
                 <Label htmlFor="phone">Phone Number</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                    +880
+                    +88
                   </span>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="1XXXXXXXXX"
+                    placeholder="01XXXXXXXXX"
                     className="pl-14"
                     required
                   />
@@ -354,7 +360,7 @@ export function ProfileEditPage() {
                       <Button
                         variant="outline"
                         className={cn(
-                          'w-full justify-start text-left font-normal',
+                          'w-1/2 justify-start text-left font-normal',
                           !formData.lastDonationDate && 'text-muted-foreground'
                         )}
                         disabled={formData.neverDonated}
@@ -396,7 +402,7 @@ export function ProfileEditPage() {
               </div>
 
               {/* Willing to Donate */}
-              <div className="space-y-4">
+              <div className="space-y-6 md:w-1/2">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label className="text-base">Willing to Donate</Label>
@@ -427,7 +433,7 @@ export function ProfileEditPage() {
           </div>
 
           {/* Section 4: Profile Photo */}
-          <div className="bg-card rounded-xl card-shadow p-6">
+          {/* <div className="bg-card rounded-xl card-shadow p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Camera className="h-5 w-5 text-primary" />
@@ -460,7 +466,7 @@ export function ProfileEditPage() {
                 </p>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Submit Buttons */}
           <div className="flex items-center justify-end gap-4">
@@ -471,8 +477,12 @@ export function ProfileEditPage() {
             >
               Cancel
             </Button>
-            <Button type="submit" className="btn-primary">
-              <Check className="h-4 w-4 mr-2" />
+            <Button type="submit" className="btn-primary" disabled={isSaving}>
+              {isSaving ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+              ) : (
+                <Check className="h-4 w-4 mr-2" />
+              )}
               {profile ? 'Save Changes' : 'Create Profile'}
             </Button>
           </div>
