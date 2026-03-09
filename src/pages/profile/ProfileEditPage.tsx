@@ -4,10 +4,10 @@ import {
   User, 
   MapPin, 
   Droplets, 
-  Camera, 
+  // Camera, 
   Check, 
   ChevronLeft,
-  Upload,
+  // Upload,
   Calendar
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -64,7 +64,7 @@ export function ProfileEditPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [localSeedMatch, setLocalSeedMatch] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  // const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
@@ -84,9 +84,9 @@ export function ProfileEditPage() {
         availabilityNote: profile.availabilityNote || '',
       });
       setLocalSeedMatch(profile.seedMatched);
-      if (profile.profilePhoto) {
-        setPhotoPreview(profile.profilePhoto);
-      }
+      // if (profile.profilePhoto) {
+      //   setPhotoPreview(profile.profilePhoto);
+      // }
     }
   }, [profile, auth.user?.email]);
 
@@ -124,16 +124,16 @@ export function ProfileEditPage() {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  // const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => {
+  //       setPhotoPreview(reader.result as string);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
 
   if (isLoading) {
     return (

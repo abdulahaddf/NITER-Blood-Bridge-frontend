@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { /* useNavigate, */ useSearchParams, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 
 export function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Verifying your email...');
   const initialized = useRef(false);
